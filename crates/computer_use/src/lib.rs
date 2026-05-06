@@ -140,13 +140,6 @@ impl ScreenshotRegion {
     /// - `top_left` has negative coordinates
     /// - `bottom_right` is not strictly greater than `top_left` in both dimensions
     pub fn validate(&self) -> Result<(), String> {
-        if self.top_left.x() < 0 || self.top_left.y() < 0 {
-            return Err(format!(
-                "Screenshot region top_left must be non-negative, got ({}, {})",
-                self.top_left.x(),
-                self.top_left.y()
-            ));
-        }
         if self.bottom_right.x() <= self.top_left.x() {
             return Err(format!(
                 "Screenshot region must have positive width (bottom_right.x {} must be > top_left.x {})",
