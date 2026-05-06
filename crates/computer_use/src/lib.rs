@@ -207,9 +207,7 @@ pub struct Screenshot {
     pub original_width: usize,
     /// The original height of the screenshot before any downscaling was applied.
     pub original_height: usize,
-    // TODO(AGENT-2283): consider making this a type that is cheap to clone
-    // (e.g.: `Arc<[u8]>`)
-    pub data: Vec<u8>,
+    pub data: std::sync::Arc<[u8]>,
     pub mime_type: Cow<'static, str>,
 }
 
