@@ -10,3 +10,4 @@ Read VISION.md, ROADMAP.md, and TODO.md before making changes. Always update CHA
 - Further addressed TODOs in `ui_components` regarding text, buttons, handle checks, and cleaned up unused tests around `evict_size`.
 - Finished integrating dependency solutions and ensured the entire test suite `cargo test` and `presubmit` passes fully with all system dependencies.
 - Synced with upstream/master and cleanly resolved everything.
+- Verified that everything builds properly after the upstream merge by running cargo check/test on ai, warpui_core, warp_core, computer_use, and the full workspace.

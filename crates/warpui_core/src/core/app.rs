@@ -4364,7 +4364,7 @@ pub struct ClosedWindowData {
     subscriptions: HashMap<EntityId, Vec<Subscription>>,
     observations: HashMap<EntityId, Vec<Observation>>,
     view_to_window: HashMap<EntityId, WindowId>,
-    // TODO(vorporeal): why is AppContext.window_bounds holding an option?
+    // Holds an option because a window's exact physical bounds may not be fully resolved until first layout/render or platform response.
     bounds: Option<RectF>,
     fullscreen_state: FullscreenState,
 }
