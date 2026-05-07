@@ -1321,7 +1321,7 @@ pub(crate) fn convert_tool_call_result_to_input(
                             height: s.height as usize,
                             original_width: s.width as usize,
                             original_height: s.height as usize,
-                            data: s.data.clone(),
+                            data: s.data.clone().into(),
                             mime_type: s.mime_type.clone().into(),
                         }
                     });
@@ -1366,7 +1366,7 @@ pub(crate) fn convert_tool_call_result_to_input(
                                 height: initial_screenshot.height as usize,
                                 original_width: screen_dimensions.width_px as usize,
                                 original_height: screen_dimensions.height_px as usize,
-                                data: initial_screenshot.data.clone(),
+                                data: initial_screenshot.data.clone().into(),
                                 mime_type: initial_screenshot.mime_type.clone().into(),
                             },
                             platform,
