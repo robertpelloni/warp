@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.1.8] - 2026-05-08
+- Addressed further minor documentation TODOs across `warpui_core` files including accessibility, components, events, and image_cache.
+
 ## [0.1.7] - 2026-05-07
 - Addressed TODO in `crates/warpui_core/src/image_cache.rs` clarifying that calculating memory size for a parsed SVG tree without traversal is inaccurate.
 

@@ -12,3 +12,5 @@ Read VISION.md, ROADMAP.md, and TODO.md before making changes. Always update CHA
 - Synced with upstream/master and cleanly resolved everything.
 - Verified that everything builds properly after the upstream merge by running cargo check/test on ai, warpui_core, warp_core, computer_use, and the full workspace.
 - Addressed SVG size calculation documentation in image_cache.
+- Synced with upstream/master and cleanly resolved everything.
+- Addressed further minor documentation TODOs across `warpui_core` files including accessibility, components, events, and image_cache.
