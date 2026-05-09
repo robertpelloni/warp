@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.1.10] - 2026-05-09
+- Addressed remaining obsolete UI TODO comments inside `warpui_core` (e.g. view structure, button borders, font picking, integration step events, text, components, link).
+
 ## [0.1.8] - 2026-05-08
 - Addressed further minor documentation TODOs across `warpui_core` files including accessibility, components, events, and image_cache.
 

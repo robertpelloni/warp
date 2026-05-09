@@ -95,9 +95,7 @@ impl<T: View> ViewHandle<T> {
         app.focused_view_id(self.window_id(app)) == Some(self.view_id)
     }
 
-    // TODO: This is the same as the `is_self_or_child_focused` function in ViewContext.
-    // Moving forward we should figure out a better interface to check whether a specific
-    // view is focused or not.
+    // Delegates to AppContext to check if this view or any of its children are focused.
     pub fn is_self_or_child_focused(&self, app: &mut AppContext) -> bool {
         let window_id = self.window_id(app);
         app.check_view_or_child_focused(window_id, &self.view_id)

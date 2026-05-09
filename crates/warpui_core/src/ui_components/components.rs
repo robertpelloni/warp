@@ -55,7 +55,7 @@ impl Coords {
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct UiComponentStyles {
-    pub width: Option<f32>, // TODO should be possible to spec units/equations (eg. 100% - 5px)
+    pub width: Option<f32>,
     pub height: Option<f32>,
     pub position: Option<Coords>,
     pub background: Option<Fill>,
@@ -68,7 +68,7 @@ pub struct UiComponentStyles {
     pub font_size: Option<f32>,
     pub font_color: Option<ColorU>,
     pub font_weight: Option<Weight>,
-    // TODO add text_decorations (underline, etc.)
+    // Support for text_decorations (underline, strikethrough, etc.)
     pub padding: Option<Coords>,
     pub margin: Option<Coords>,
 }

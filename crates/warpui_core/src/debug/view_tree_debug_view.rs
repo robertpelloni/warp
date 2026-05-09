@@ -51,7 +51,6 @@ impl ViewInfo {
                 // This relies on an expectation that the first font loaded is
                 // a reasonable one to draw this view with, but we lack a better
                 // method, at the moment, to intentionally select a font.
-                // TODO(vorporeal): Don't arbitrarily pick font family 0.
                 crate::fonts::FamilyId(0),
                 13.,
             );

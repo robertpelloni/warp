@@ -641,7 +641,6 @@ pub(super) async fn run_step(
             return AssertionOutcome::Canceled;
         }
 
-        // TODO would be cool to move it under IntegrationTestEvent
         match e {
             IntegrationTestEvent::WithEvent(..) | IntegrationTestEvent::WithEventFn(..) => {
                 let event = if let IntegrationTestEvent::WithEvent(e) = e {

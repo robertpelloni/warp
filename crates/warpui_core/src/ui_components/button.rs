@@ -350,7 +350,6 @@ impl Button {
         if let Some(corner) = styles.border_radius {
             container = container.with_corner_radius(corner);
         }
-        // TODO border width separate for top/left/right/bottom
         let mut border = Border::all(styles.border_width.unwrap_or_default());
         if let Some(border_color) = styles.border_color {
             border = border.with_border_fill(border_color);
