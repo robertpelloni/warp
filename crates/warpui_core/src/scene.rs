@@ -439,7 +439,6 @@ impl Scene {
     // on its current layer. The intersection is then checked against the event position
     // to determine whether we should dispatch the event.
     pub fn visible_rect(&self, origin: Point, size: Vector2F) -> Option<RectF> {
-        // TODO: Investigate how / when we would pass a z-index that isn't in the scene
         // This appears to be fairly common, based on adding sentry reporting to it, however it
         // doesn't seem to dramatically impact app usage. Perhaps it's something that happens on
         // a view teardown frame?
@@ -654,7 +653,6 @@ impl Scene {
         font_size: f32,
         color: ColorU,
     ) -> &mut Glyph {
-        // TODO: Support hit testing on glyphs?
         let layer = self.active_layer();
         layer.glyphs.push(Glyph {
             glyph_key: GlyphKey {

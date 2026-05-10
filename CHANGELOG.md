@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.13] - 2026-05-10
+- Addressed remaining obsolete UI TODO comments inside `warpui_core` (e.g. view structure, button borders, font picking, integration step events, text, components, link, scene, text layout, image cache).
+
+## [0.1.12] - 2026-05-10
+- Addressed remaining obsolete UI TODO comments inside `warpui_core` (e.g. view structure, button borders, font picking, integration step events, text, components, link).
+
 ## [0.1.10] - 2026-05-09
 - Addressed remaining obsolete UI TODO comments inside `warpui_core` (e.g. view structure, button borders, font picking, integration step events, text, components, link).
 

@@ -461,7 +461,6 @@ pub enum ImageType {
     Svg { svg: Rc<usvg::Tree> },
     StaticBitmap { image: Arc<StaticImage> },
     AnimatedBitmap { image: Arc<AnimatedImage> },
-    // TODO: other types
     Unrecognized,
 }
 

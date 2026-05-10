@@ -87,8 +87,7 @@ pub enum KeyState {
     Released,
 }
 
-/// TODO: for the events that have modifiers (e.g. cmd, shift), we should
-/// combine these into a Modifiers struct and pass these along from fn to fn.
+/// Events capturing UI/keyboard/mouse interaction and windowing actions.
 #[derive(Clone, Debug, strum_macros::EnumDiscriminants)]
 pub enum Event {
     /// Gets fired when a key is pressed. The keystroke attribute contains the raw

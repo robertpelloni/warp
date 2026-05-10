@@ -16,3 +16,5 @@ Read VISION.md, ROADMAP.md, and TODO.md before making changes. Always update CHA
 - Addressed further minor documentation TODOs across `warpui_core` files including accessibility, components, events, and image_cache.
 - Removed stale and obsolete `TODO` comments from `warpui_core` such as random arbitrary font selection, button borders, and obsolete refactoring notes for `View` and `Entity`.
 - Addressed further minor documentation TODOs across `warpui_core` files including accessibility, components, events, and image_cache.
+- Removed stale and obsolete `TODO` comments from `warpui_core` such as random arbitrary font selection, button borders, and obsolete refactoring notes for `View` and `Entity`.
+- Removed stale and obsolete `TODO` comments from `warpui_core` such as scene z-index notes, image_cache types, and text layout font sizing.
