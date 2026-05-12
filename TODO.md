@@ -2,11 +2,9 @@
 
 ```
 ./crates/websocket/src/proxy.rs:6://! TODO: Switch to tungstenite's native proxy support once it is available and remove this
-./crates/computer_use/src/windows/screenshot.rs:31:/// TODO: relax the non-negative check in `ScreenshotRegion::validate`
 ./crates/computer_use/src/lib.rs:217:    // TODO(AGENT-2283): consider making this a type that is cheap to clone
 ./crates/computer_use/src/linux/x11/screenshot.rs:28:    // TODO: Consider compositing the cursor into the screenshot in the future.
 ./crates/computer_use/src/mac/keycode_cache.rs:66:/// TODO(QUALITY-271): Store the modifier keys as well.
-./crates/computer_use/src/mac/keyboard.rs:42:            // TODO(vorporeal): when sending an ASCII character, send it using virtual key codes
 ./crates/syntax_tree/src/queries/indent_query.rs:122:            // TODO(INT-614): Remove this special case.
 ./crates/syntax_tree/src/queries/highlight_query.rs:97:// TODO(kevin): Once we migrate buffer to store ArrayStrings. We should implement the chunks API on buffer directly to avoid collecting
 ./crates/http_server/src/lib.rs:17:    /// TODO(vorporeal): Remove this when we have a shared tokio runtime.
@@ -24,14 +22,10 @@
 ./crates/warpui_core/src/core/app.rs:4367:    // TODO(vorporeal): why is AppContext.window_bounds holding an option?
 ./crates/warpui_core/src/core/entity.rs:37:/// TODO(vorporeal): This can probably be eliminated entirely, with View and
 ./crates/warpui_core/src/core/view/context.rs:503:    /// TODO(vorporeal): Determine how best to eliminate this function and move
-./crates/warpui_core/src/core/view/handle.rs:98:    // TODO: This is the same as the `is_self_or_child_focused` function in ViewContext.
 ./crates/warpui_core/src/ui_components/radio_buttons.rs:100:// TODO(roland): Remembering the selected option can be unintuitive if the number of options
 ./crates/warpui_core/src/ui_components/link.rs:12:    text: String, // TODO figure out how it can be ui element (or icon?)
 ./crates/warpui_core/src/ui_components/text.rs:171:    // TODO(alokedesai): Make it clear throughout the text rendering code that highlights are
 ./crates/warpui_core/src/ui_components/components.rs:58:    pub width: Option<f32>, // TODO should be possible to spec units/equations (eg. 100% - 5px)
-./crates/warpui_core/src/ui_components/components.rs:71:    // TODO add text_decorations (underline, etc.)
-./crates/warpui_core/src/ui_components/button.rs:353:        // TODO border width separate for top/left/right/bottom
-./crates/warpui_core/src/accessibility.rs:150:    // TODO add frame support
 ./crates/warpui_core/src/platform/app.rs:106:    // TODO(CORE-2322): implement desktop notifications on Windows
 ./crates/warpui_core/src/platform/app.rs:160:    // TODO(CORE-2683): implement events for internet reachability changes
 ./crates/warpui_core/src/platform/app.rs:295:// TODO(CORE-2691): implement native Windows OS app menus

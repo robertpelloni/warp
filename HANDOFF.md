@@ -21,3 +21,7 @@ Read VISION.md, ROADMAP.md, and TODO.md before making changes. Always update CHA
 - All remaining TODOs in `warpui_core` have been analyzed and updated correctly where necessary.
 - Verified all structural updates completed and submitted successfully over previous phases.
 - Verified all structural updates completed and submitted successfully over previous phases.
+
+- Resolved untracked git checkout problems that caused large merge conflicts locally.
+- Re-scraped `TODO.md` to remove old TODOs that were fixed in previous phases (`validate` region checking, macOS ASCII injection, button borders, frames, text decorations, view handling duplicate comments, etc.).
+- Ready for plugin architecture or further UI stability work.
