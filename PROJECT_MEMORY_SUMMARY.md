@@ -17,3 +17,9 @@
     * **Confirmed:** Local test execution strictly requires `protoc`, `libasound2-dev`, and `corepack` to be active in the shell environment.
     * **Unresolved Issues:** None blocking the current build. The repository is perfectly clean, synced, documented, and fully passing all CI/presubmit checks.
 * **Immediate Next Steps (derived from trace):** The current agent session has concluded and successfully submitted the branch. The next agent picking up this environment should read `HANDOFF.md`, `ROADMAP.md`, and `TODO.md` to identify the next unimplemented feature or bug fix to tackle.
+
+### Post-Submission Actions
+- After submission, attempted to merge local branch into upstream `master`. This caused a catastrophic merge/checkout with >600 file changes due to tracked/untracked environment drift issues (likely `node_modules` or `.cargo` state getting caught up during the rebase/merge operation).
+- Aborted that merge completely using `git reset --hard HEAD` and `git clean -xfd`.
+- Continued tracking down minor documentation issues in the `TODO.md` file, clearing out old notes (like the one waiting for upstream tungstenite-rs fixes).
+- Validated the state of the repository remained uncorrupted and staged for the next process.

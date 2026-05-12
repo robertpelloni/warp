@@ -25,3 +25,5 @@ Read VISION.md, ROADMAP.md, and TODO.md before making changes. Always update CHA
 - Resolved untracked git checkout problems that caused large merge conflicts locally.
 - Re-scraped `TODO.md` to remove old TODOs that were fixed in previous phases (`validate` region checking, macOS ASCII injection, button borders, frames, text decorations, view handling duplicate comments, etc.).
 - Ready for plugin architecture or further UI stability work.
+
+- Cleaned up tungstenite TODO from the backlog since it is waiting on a specific external PR `snapview/tungstenite-rs#530`.

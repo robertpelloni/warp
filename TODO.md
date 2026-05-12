@@ -1,7 +1,6 @@
 # Project TODOs
 
 ```
-./crates/websocket/src/proxy.rs:6://! TODO: Switch to tungstenite's native proxy support once it is available and remove this
 ./crates/computer_use/src/lib.rs:217:    // TODO(AGENT-2283): consider making this a type that is cheap to clone
 ./crates/computer_use/src/linux/x11/screenshot.rs:28:    // TODO: Consider compositing the cursor into the screenshot in the future.
 ./crates/computer_use/src/mac/keycode_cache.rs:66:/// TODO(QUALITY-271): Store the modifier keys as well.
