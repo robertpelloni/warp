@@ -367,7 +367,7 @@ impl Asset for ImageType {
 
     fn size_in_bytes(&self) -> usize {
         match self {
-            ImageType::Svg { .. } => 0, // We cannot accurately calculate the memory size of the parsed SVG tree without traversing it.
+            ImageType::Svg { .. } => 0, // TODO: How do we calculate svg size in bytes?
             ImageType::StaticBitmap { image } => image.rgba_bytes().len(),
             ImageType::AnimatedBitmap { image } => image
                 .frames
@@ -461,6 +461,7 @@ pub enum ImageType {
     Svg { svg: Rc<usvg::Tree> },
     StaticBitmap { image: Arc<StaticImage> },
     AnimatedBitmap { image: Arc<AnimatedImage> },
+    // TODO: other types
     Unrecognized,
 }
 

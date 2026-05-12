@@ -28,8 +28,10 @@ use crate::{Screenshot, ScreenshotParams};
 /// cannot reach areas with negative virtual-screen coordinates via region captures; those areas
 /// are still included in the full-screen capture.
 ///
-/// The region path can reach monitors positioned above/left of the primary.
-/// The Win32 side of this module already supports negative coordinates.
+/// TODO: relax the non-negative check in `ScreenshotRegion::validate`
+/// (`crates/computer_use/src/lib.rs`) so the region path can reach monitors positioned above /
+/// left of the primary. The Win32 side of this module already supports negative coordinates; the
+/// restriction is shared across Mac / Linux / Windows, so this is a platform-neutral follow-up.
 pub fn take(params: ScreenshotParams) -> Result<Screenshot, String> {
     // Opt this thread into per-monitor-v2 DPI awareness so the virtual-screen metrics and `BitBlt`
     // all operate in physical pixels, regardless of the host process manifest. Dropped at end of

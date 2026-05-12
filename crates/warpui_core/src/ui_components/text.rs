@@ -168,7 +168,7 @@ impl Paragraph {
         self
     }
 
-    // Support for text rendering highlights
+    // TODO(alokedesai): Make it clear throughout the text rendering code that highlights are
     // indexed by _character_, not byte.
     pub fn add_highlight(&mut self, highlight_indices: Vec<usize>, highlight: Highlight) {
         if highlight_indices.is_empty() {

@@ -62,7 +62,7 @@ pub fn process_screenshot(
         height: height as usize,
         original_width: original_width as usize,
         original_height: original_height as usize,
-        data: data.into(),
+        data,
         mime_type: "image/png".into(),
     })
 }

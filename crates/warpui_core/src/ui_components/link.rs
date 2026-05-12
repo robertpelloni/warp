@@ -9,7 +9,7 @@ use crate::{
 pub type OnClickFn = Box<dyn Fn(&mut EventContext)>;
 
 pub struct Link {
-    text: String, // Text to display in the link
+    text: String, // TODO figure out how it can be ui element (or icon?)
     /// A URL that should be opened in the user's default web browser when clicked.
     url: Option<String>,
     /// A callback that should be fired when clicked.
