@@ -73,8 +73,3 @@ func (s *LocalSession) Resize(cols, rows int) error {
 		Rows: uint16(rows),
 	})
 }
-
-func (s *LocalSession) GetWorkingDirectory() (string, error) {
-	// Simple implementation: this usually requires OS-specific logic (e.g. reading from /proc)
-	return os.Getwd()
-}

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.6.0] - 2024-05-21
+### Added
+- Staging deployment infrastructure (`rebuild/script/deploy_staging.sh`).
+- Automated deployment bundle generation (tar.gz).
+- Pre-deployment binary verification logic.
+
 ## [0.5.0] - 2024-05-21
 ### Added
 - Deployment infrastructure with cross-platform build script (`rebuild/script/build.sh`).
