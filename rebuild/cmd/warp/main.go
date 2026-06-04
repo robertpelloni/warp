@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
 	"golang.org/x/term"
@@ -27,17 +25,7 @@ func main() {
 	defer session.Close()
 
 	// Handle terminal resizing
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGWINCH)
-	go func() {
-		for range ch {
-			if fd, isTerm := os.Stdout.Fd(), term.IsTerminal(int(os.Stdout.Fd())); isTerm {
-				w, h, _ := term.GetSize(int(fd))
-				session.Resize(w, h)
-			}
-		}
-	}()
-	ch <- syscall.SIGWINCH // Initial resize
+	setupResize(session)
 
 	// Set terminal to raw mode
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))

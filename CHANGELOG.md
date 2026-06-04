@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.5.0] - 2024-05-21
+### Added
+- Deployment infrastructure with cross-platform build script (`rebuild/script/build.sh`).
+- Cross-compilation support for Linux, macOS (amd64/arm64), and Windows.
+- Final test verification and package preparation for deployment.
+
 ## [0.4.0] - 2024-05-21
 ### Added
 - Comprehensive integration testing for the Agent, Terminal, and Harness packages.

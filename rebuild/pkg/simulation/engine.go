@@ -46,7 +46,11 @@ func (e *Engine) Step(dt float64) {
 func (e *Engine) Run(steps int, dt float64) {
 	for i := 0; i < steps; i++ {
 		e.Step(dt)
-		fmt.Printf("Step %d: Entity[0] at (%.2f, %.2f)\n", i, e.Entities[0].X, e.Entities[0].Y)
+		e.mu.Lock()
+		if len(e.Entities) > 0 {
+			fmt.Printf("Step %d: Entity[0] at (%.2f, %.2f)\n", i, e.Entities[0].X, e.Entities[0].Y)
+		}
+		e.mu.Unlock()
 		time.Sleep(time.Duration(dt*1000) * time.Millisecond)
 	}
 }
