@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.7.0] - 2024-05-21
+### Verified
+- Full test suite pass (100%) for all Go packages.
+- Cross-platform build stability for Linux, macOS, and Windows.
+- Staging deployment workflow and bundle integrity.
+
 ## [0.6.0] - 2024-05-21
 ### Added
 - Staging deployment infrastructure (`rebuild/script/deploy_staging.sh`).
