@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.4.0] - 2024-05-21
+### Added
+- Comprehensive integration testing for the Agent, Terminal, and Harness packages.
+- Core Simulation Engine in `pkg/simulation` based on AI Game Engine analysis.
+- Pilot Autonomous Game Simulation demonstrating AI agent interaction with a simulation loop.
+
 ## [0.3.0] - 2024-05-21
 ### Added
 - Functional PTY handling using `creack/pty`.

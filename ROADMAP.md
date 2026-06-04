@@ -4,6 +4,7 @@
 - [x] Initialize Go project structure in `rebuild/`.
 - [x] Port core terminal emulation (PTY handling).
 - [x] Implement basic terminal harness in Go.
+- [x] Implement Simulation Engine and Pilot Autonomous Loop.
 
 ## Phase 2: Warp Feature Parity
 - [ ] Port Warp Blocks.
