@@ -1,8 +1,6 @@
 package harness
 
-import (
-	"context"
-)
+import "context"
 
 type Message struct {
 	Role    string `json:"role"`
@@ -21,4 +19,8 @@ type ToolCall struct {
 
 type Provider interface {
 	Chat(ctx context.Context, messages []Message, tools []map[string]interface{}) (*LLMResponse, error)
+}
+
+type ModelInfo struct {
+	ID string
 }

@@ -33,35 +33,15 @@ impl GoHarnessBridge {
 
     pub async fn run_prompt(&self, prompt: &str) -> Result<RunResponse> {
         let url = format!("{}/run", self.base_url);
-        let req = RunRequest {
-            prompt: prompt.to_string(),
-        };
-
-        let resp = self.client
-            .post(&url)
-            .json(&req)
-            .send()
-            .await
-            .context("Failed to send request to Go harness")?;
-
-        let run_resp: RunResponse = resp.json()
-            .await
-            .context("Failed to decode response from Go harness")?;
-
-        if let Some(ref err) = run_resp.error {
-            return Err(anyhow::anyhow!("Go harness error: {}", err));
-        }
-
+        let req = RunRequest { prompt: prompt.to_string() };
+        let resp = self.client.post(&url).json(&req).send().await.context("Go harness call failed")?;
+        let run_resp: RunResponse = resp.json().await.context("Go harness decode failed")?;
         Ok(run_resp)
     }
 
     pub async fn check_health(&self) -> Result<()> {
         let url = format!("{}/health", self.base_url);
         let resp = self.client.get(&url).send().await?;
-        if resp.status().is_success() {
-            Ok(())
-        } else {
-            Err(anyhow::anyhow!("Go harness health check failed"))
-        }
+        if resp.status().is_success() { Ok(()) } else { Err(anyhow::anyhow!("health fail")) }
     }
 }

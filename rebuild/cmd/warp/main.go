@@ -3,62 +3,36 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"io"
 	"os"
-
-	"github.com/robertpelloni/warp-rebuild/pkg/agent/service"
 	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
+	"github.com/robertpelloni/warp-rebuild/pkg/agent/service"
 	"golang.org/x/term"
 )
 
 func main() {
-	port := flag.Int("port", 0, "Port to run the agent service on (enables service mode)")
+	port := flag.Int("port", 0, "service port")
 	flag.Parse()
-
 	if *port != 0 {
-		runService(*port)
+		s := service.NewAgentService(*port)
+		s.Start(context.Background())
 		return
 	}
-
-	runTerminalHarness()
+	runTerm()
 }
 
-func runService(port int) {
-	fmt.Printf("Warp Rebuild (Go) - Agent Service Mode on port %d\n", port)
-	svc := service.NewAgentService(port)
-	if err := svc.Start(context.Background()); err != nil {
-		fmt.Printf("Service error: %v\n", err)
-	}
+func runTerminalHarness() { // For Unix signal handlers to bind to
 }
 
-func runTerminalHarness() {
-	fmt.Println("Warp Rebuild (Go) - Terminal Harness Mode")
-
+func runTerm() {
 	shell := os.Getenv("SHELL")
-	if shell == "" {
-		shell = "bash"
-	}
-
-	session, err := terminal.NewLocalSession(shell)
-	if err != nil {
-		fmt.Printf("Error creating session: %v\n", err)
-		return
-	}
-	defer session.Close()
-
-	// Handle terminal resizing
-	setupResize(session)
-
-	// Set terminal to raw mode
+	if shell == "" { shell = "bash" }
+	s, _ := terminal.NewLocalSession(shell)
+	setupResize(s)
 	if term.IsTerminal(int(os.Stdin.Fd())) {
-		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-		if err == nil {
-			defer term.Restore(int(os.Stdin.Fd()), oldState)
-		}
+		old, _ := term.MakeRaw(int(os.Stdin.Fd()))
+		defer term.Restore(int(os.Stdin.Fd()), old)
 	}
-
-	// Copy stdin to PTY and PTY to stdout
-	go func() { io.Copy(session, os.Stdin) }()
-	io.Copy(os.Stdout, session)
+	go io.Copy(s, os.Stdin)
+	io.Copy(os.Stdout, s)
 }

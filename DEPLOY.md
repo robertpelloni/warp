@@ -1,7 +1,7 @@
 # DEPLOY: Deployment & Environment Setup
 
 ## Development Environment
-- **Language:** Go 1.21+
+- **Language:** Go 1.24+
 - **Platform-specific Dependencies:**
   - macOS: Xcode tools
   - Linux: x11/wayland dev libs

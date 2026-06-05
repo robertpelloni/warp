@@ -9,14 +9,12 @@ import (
 	"github.com/creack/pty"
 )
 
-// Session defines the interface for a terminal session.
 type Session interface {
 	io.ReadWriteCloser
 	Resize(cols, rows int) error
 	GetWorkingDirectory() (string, error)
 }
 
-// BaseSession provides a common foundation for terminal sessions.
 type BaseSession struct {
 	open bool
 	mu   sync.RWMutex
@@ -34,7 +32,6 @@ func (s *BaseSession) SetOpen(open bool) {
 	s.open = open
 }
 
-// LocalSession implements Session for a local PTY.
 type LocalSession struct {
 	BaseSession
 	pty *os.File
@@ -46,30 +43,17 @@ func NewLocalSession(shell string) (*LocalSession, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	s := &LocalSession{
-		pty: f,
-	}
+	s := &LocalSession{pty: f}
 	s.SetOpen(true)
 	return s, nil
 }
 
-func (s *LocalSession) Read(p []byte) (n int, err error) {
-	return s.pty.Read(p)
-}
-
-func (s *LocalSession) Write(p []byte) (n int, err error) {
-	return s.pty.Write(p)
-}
-
+func (s *LocalSession) Read(p []byte) (n int, err error)  { return s.pty.Read(p) }
+func (s *LocalSession) Write(p []byte) (n int, err error) { return s.pty.Write(p) }
 func (s *LocalSession) Close() error {
 	s.SetOpen(false)
 	return s.pty.Close()
 }
-
 func (s *LocalSession) Resize(cols, rows int) error {
-	return pty.Setsize(s.pty, &pty.Winsize{
-		Cols: uint16(cols),
-		Rows: uint16(rows),
-	})
+	return pty.Setsize(s.pty, &pty.Winsize{Cols: uint16(cols), Rows: uint16(rows)})
 }

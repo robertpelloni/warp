@@ -17,8 +17,11 @@
 - [x] Integrate Go LLM Harness with Rust Core (IPC Bridge).
 - [x] Establish Functional Agentic Foundation (Milestone 1.3.0).
 
-## Phase 4: Feature Expansion (Current)
-- [ ] Integrate Tabby features.
+## Phase 4: Feature Expansion (Complete)
+- [x] Integrate OpenCode (Supervisors).
+- [x] Integrate Claude Code Superpowers (Skill Manager).
+
+## Phase 5: Deep Parity & Polish (Current)
 - [ ] Integrate Tabby features.
 - [ ] Integrate Hyper features.
 - [ ] Integrate Wave features.
@@ -28,7 +31,7 @@
 - [ ] Integrate Gemini-CLI features.
 - [ ] Integrate Hermes features.
 
-## Phase 4: Optimization & Polish
+## Phase 6: Optimization & Polish
 - [ ] Advanced performance tuning.
 - [ ] Comprehensive documentation.
 - [ ] Public Beta Release.

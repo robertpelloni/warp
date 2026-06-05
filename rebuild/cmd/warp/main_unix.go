@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
 	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
 	"golang.org/x/term"
 )
@@ -22,5 +21,5 @@ func setupResize(session terminal.Session) {
 			}
 		}
 	}()
-	ch <- syscall.SIGWINCH // Initial resize
+	ch <- syscall.SIGWINCH
 }

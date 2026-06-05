@@ -10,3 +10,5 @@
 - [ ] Implement VT100/Xterm terminal parsing in Go.
 - [ ] Build out the TUI using `bubbletea`.
 - [ ] Integrate actual LLM calls (Anthropic/OpenAI) into the Agent Loop.
+- [x] Integrate OpenCode Supervisor pattern.
+- [x] Integrate Claude Code Skill Manager.
