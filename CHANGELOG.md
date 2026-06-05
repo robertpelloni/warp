@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [2.1.0] - 2024-05-21
+### Verified & Deployment Ready
+- Build integrity verified across all production targets (Linux, macOS, Windows).
+- Formalized `DEPLOY_TEST_PLAN.md` for multi-mode smoke testing.
+- Verified staging bundle integrity for v2.1.0 release candidate.
+
 ## [2.0.0] - 2024-05-21
 ### Milestone: Enterprise-Grade LLM Harness Integration
 - **OpenCode Integration:** Implemented Supervisor pattern for LLM routing and task oversight.

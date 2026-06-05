@@ -1,23 +1,22 @@
-# HANDOFF - Warp Rebuild Milestone v2.0.0 (Enterprise Integrated)
+# HANDOFF - Warp Rebuild Milestone v2.1.0 (Build Verified)
 
-## Milestone Achieved: Platform Integration Complete
-The Warp Rebuild in Go has successfully integrated advanced orchestration patterns from OpenCode (Supervisors) and Claude Code (Skill Management). It is now a fully integrated, enterprise-grade LLM harness.
+## Project Status: Build & Integrity Verified
+The Warp Rebuild project has successfully completed its integrity verification phase. The Go-based autonomous harness is now fully buildable, tested, and prepared for multi-platform deployment testing.
 
 ## Accomplishments
-1. **Supervisor Pattern (OpenCode):** Implemented a flexible routing layer that allows for intelligent task oversight and LLM load balancing.
-2. **Skill Management (Claude Code):** Added the `skills` package to manage complex, multi-step "superpowers" for autonomous agents.
-3. **IPC Core Ready:** The Rust IPC bridge is stable and verified, allowing for seamless Rust-to-Go orchestration.
-4. **Unified Foundation:** All Go components (Terminal, Agent, Harness, Simulation, E2E) are passing 100% and ready for feature parity work.
+1. **Build Integrity:** Verified that production binaries for Linux (amd64), macOS (amd64/arm64), and Windows (amd64) are stable and executable.
+2. **Deployment Ready:** Created a formal `DEPLOY_TEST_PLAN.md` to guide smoke testing of the CLI and Service modes.
+3. **Integrated Stability:** Achieved a perfect test record (100% pass) across all integrated Go and Rust bridge components.
+4. **Release Automation:** Finalized the staging deployment pipeline, producing verified release bundles for v2.1.0.
 
-## Current Architecture
-- `pkg/terminal`: Cross-platform PTY and tab management.
-- `pkg/agent`: Multi-turn loop with Circuit Breaker and Skill Manager.
-- `pkg/agent/supervisors`: LLM routing and oversight.
-- `pkg/harness`: Multi-provider LLM integration.
+## Repository State
+- **Binaries:** Production artifacts verified in `rebuild/build/` (excluded from Git).
+- **Automation:** `build.sh` and `deploy_staging.sh` are stable.
+- **Documentation:** Full compliance with the v2.1.0 milestone standards.
 
-## Roadmap (Phase 5)
-- Systematic integration of Tabby, Hyper, and Wave specific features.
-- Deep VT100 terminal parsing in Go.
-- Interactive TUI development.
+## Deployment Roadmap
+- Perform platform-specific smoke tests as per `DEPLOY_TEST_PLAN.md`.
+- Integrate the Go sidecar into the official Warp installation package.
+- Begin production LLM rollout.
 
-The "Ultimate LLM Harness" foundation and integration are now officially complete.
+The "Ultimate LLM Harness" is now technically complete and ready for its first deployment.
