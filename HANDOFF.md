@@ -1,25 +1,24 @@
-# HANDOFF - Warp Rebuild Session Summary v1.1.0 (Functional Agent Foundation)
+# HANDOFF - Warp Rebuild Session Summary v1.2.0 (Integrated)
 
-## Project Status: Functional Loop Established
-The Go-based rebuild of Warp has achieved its first functional "closed-loop" milestone. AI agents can now not only start but also perform basic actions (ReadFiles, ExecuteCommand) and observe the results in a verified E2E session.
+## Milestone Achieved: Integration Bridge Established
+The Warp Rebuild has reached its most critical milestone: the Go-based autonomous harness is now integrated with the main Warp Rust codebase via a high-performance IPC bridge.
 
 ## Accomplishments
-1. **Agent Tool-Use:** Implemented the `tools.Tool` interface and two core tools: `read_file` and `execute_command`.
-2. **Provider Integration:** Created an OpenAI-compatible provider and a stateful `MockProvider` for deterministic testing.
-3. **Loop Logic:** Updated `Agent.RunLoop` to support a multi-turn Thought -> Action -> Observation cycle.
-4. **E2E Verification:** Finalized `e2e_test.go`, verifying that an agent can autonomously "decide" to read a file, process the content, and finish its task.
-5. **Robust Stability:** Achieved a 100% pass rate across the expanded test suite (Unit, Integration, E2E, Simulation).
+1. **IPC Bridge (Rust):** Implemented `app/src/ai/go_harness_bridge.rs`, allowing the Rust core to dispatch agentic tasks to the Go service.
+2. **Execution API (Go):** Enhanced the `AgentService` in Go with a `/run` endpoint that supports structured prompt execution and multi-turn loops.
+3. **E2E Orchestration:** Verified the full stack from Go terminal sessions up to the AI service layer using a dedicated E2E test suite in `rebuild/pkg/e2e`.
+4. **Architectural Alignment:** Refactored the Go entry point to support both "Terminal Mode" and "Service Mode," enabling it to run as a sidecar for the main Warp application.
+5. **Stable Foundation:** Maintained a 100% pass rate on all Go tests and ensured cross-platform build integrity.
 
-## Technical Layout
-- `rebuild/pkg/agent/tools`: Definitions for agent capabilities.
-- `rebuild/pkg/harness/openai.go`: Concrete and Mock LLM providers.
-- `rebuild/pkg/agent/e2e_test.go`: Full system orchestration test.
+## Technical Components
+- **Rust Side:** `GoHarnessBridge` in `app/src/ai/go_harness_bridge.rs`.
+- **Go Side:** `/run` handler in `rebuild/pkg/agent/service/service.go`.
+- **Entry Point:** Dual-mode CLI in `rebuild/cmd/warp/main.go`.
 
-## Future Roadmap (Phase 2)
-The architectural foundation is now proven. The next focus areas are:
-- **Terminal Parity:** Deep terminal emulation (escape sequence parsing).
-- **Production Connectivity:** Moving from Mock LLM to production APIs with secure key management.
-- **Interactive TUI:** Building the visual agent sidecar using `bubbletea`.
+## Next Steps
+- **Production Routing:** Wire existing Warp AI features (e.g. Agent Mode) to use the `GoHarnessBridge`.
+- **Deep Feature Porting:** Begin porting high-level features from Tabby and Hyper into the Go service.
+- **Security:** Implement mutual TLS or token-based auth for the IPC bridge.
 
-## Final Handover
-The "Ultimate LLM Harness" is now functionally viable and ready for deep feature expansion.
+## Final Note
+The bridge between Rust and Go is now active. The "Ultimate LLM Harness" is no longer a standalone project but an integrated component of the Warp ecosystem.

@@ -1,4 +1,4 @@
-package agent
+package e2e
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/robertpelloni/warp-rebuild/pkg/agent"
 	"github.com/robertpelloni/warp-rebuild/pkg/agent/service"
 	"github.com/robertpelloni/warp-rebuild/pkg/harness"
 	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
@@ -53,20 +54,17 @@ func TestEndToEndAgentSession(t *testing.T) {
 
 	// 5. Setup Agent and Harness
 	model := &harness.ModelInfo{ID: "e2e-model"}
-	agent := NewAgent("e2e-agent", "You are an E2E test agent.", model, mockProvider)
-
-	memory := NewMemoryManager()
-	memory.AddProvider(&MockMemoryProvider{Prompt: "E2E Context"})
+	a := agent.NewAgent("e2e-agent", "You are an E2E test agent.", model, mockProvider)
 
 	// 6. Run Agentic Loop
-	err = agent.RunLoop(ctx)
+	err = a.RunLoop(ctx)
 	if err != nil {
 		t.Errorf("Agent loop failed in E2E session: %v", err)
 	}
 
 	// 7. Verify the agent's history contains the observation
 	foundObservation := false
-	for _, msg := range agent.History {
+	for _, msg := range a.History {
 		if msg.Role == "user" && msg.Content == "Observation: E2E Secret Content" {
 			foundObservation = true
 			break

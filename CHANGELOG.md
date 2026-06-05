@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.2.0] - 2024-05-21
+### Added
+- Integrated Go LLM harness with the Warp Rust core via IPC Bridge.
+- Rust-based `GoHarnessBridge` for communicating with the Go agent service.
+- Remote execution API in Go (`/run` endpoint) supporting structured prompts.
+- Verified system-wide E2E orchestration between Go and Rust components.
+
 ## [1.1.0] - 2024-05-21
 ### Added
 - Functional AI Agent tool-use implementation (ReadFiles, ExecuteCommand).

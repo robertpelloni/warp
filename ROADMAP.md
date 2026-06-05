@@ -8,12 +8,14 @@
 - [x] Comprehensive Test Verification and Staging Readiness.
 - [x] Final Production Release Prep (v1.0.0).
 
-## Phase 2: Warp Feature Parity (Current)
+## Phase 2: Warp Feature Parity
 - [ ] Port Warp Blocks.
 - [ ] Port Warp AI Agent Mode.
 - [ ] Port Warp Drive (Sync).
 
-## Phase 3: The Ultimate Harness Integration
+## Phase 3: The Ultimate Harness Integration (Current)
+- [x] Integrate Go LLM Harness with Rust Core (IPC Bridge).
+- [ ] Integrate Tabby features.
 - [ ] Integrate Tabby features.
 - [ ] Integrate Hyper features.
 - [ ] Integrate Wave features.
