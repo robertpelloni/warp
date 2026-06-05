@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/creack/pty v1.1.24
+	github.com/sashabaranov/go-openai v1.41.2
 	golang.org/x/term v0.24.0
 )
 

@@ -8,7 +8,8 @@ import (
 
 func TestAgentCreation(t *testing.T) {
 	model := &harness.ModelInfo{ID: "test-model"}
-	a := NewAgent("agent1", "You are a helpful assistant.", model)
+	mockProvider := &harness.MockProvider{}
+	a := NewAgent("agent1", "You are a helpful assistant.", model, mockProvider)
 
 	if a.ID != "agent1" {
 		t.Errorf("Expected ID agent1, got %s", a.ID)

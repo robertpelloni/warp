@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [1.1.0] - 2024-05-21
+### Added
+- Functional AI Agent tool-use implementation (ReadFiles, ExecuteCommand).
+- OpenAI-compatible provider client and Mock LLM for local testing.
+- End-to-End (E2E) verification suite for the autonomous agentic session with tool-calling.
+- Seamless integration testing between `AgentService`, `LocalSession`, and `Agent` loop.
+- Refined test infrastructure for deterministic multi-package validation.
+
 ## [1.0.0] - 2024-05-21
 ### Milestone: Core Rebuild Complete
 - **Ultimate LLM Harness:** Established foundational Go-based architecture for autonomous AI agents.

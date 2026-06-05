@@ -26,7 +26,8 @@ func TestPilotSimulation(t *testing.T) {
 
 	// 2. Setup AI Agent as the Pilot
 	model := &harness.ModelInfo{ID: "simulation-pilot-model"}
-	pilot := agent.NewAgent("pilot-1", "You are the pilot of a simulation. Monitor and adjust entity velocities.", model)
+	mockProvider := &harness.MockProvider{}
+	pilot := agent.NewAgent("pilot-1", "You are the pilot of a simulation. Monitor and adjust entity velocities.", model, mockProvider)
 
 	// 3. Run Pilot Loop
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

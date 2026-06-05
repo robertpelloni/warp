@@ -43,12 +43,13 @@ func TestHarnessIntegration(t *testing.T) {
 	registry.RegisterModel(model)
 
 	// 3. Setup Agent components
+	mockProvider := &harness.MockProvider{}
 	memory := NewMemoryManager()
 	memory.AddProvider(&MockMemoryProvider{Prompt: "Integration Context"})
 
 	cb := NewCircuitBreaker(3, 1*time.Second)
 
-	agent := NewAgent("agent-1", "Standard System Prompt", model)
+	agent := NewAgent("agent-1", "Standard System Prompt", model, mockProvider)
 
 	// 4. Verification: Ensure all parts are wired and accessible
 	if tm.GetActiveTab().ID != tab.ID {
