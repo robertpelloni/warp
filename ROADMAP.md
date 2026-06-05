@@ -13,8 +13,11 @@
 - [ ] Port Warp AI Agent Mode.
 - [ ] Port Warp Drive (Sync).
 
-## Phase 3: The Ultimate Harness Integration (Current)
+## Phase 3: The Ultimate Harness Integration (Complete)
 - [x] Integrate Go LLM Harness with Rust Core (IPC Bridge).
+- [x] Establish Functional Agentic Foundation (Milestone 1.3.0).
+
+## Phase 4: Feature Expansion (Current)
 - [ ] Integrate Tabby features.
 - [ ] Integrate Tabby features.
 - [ ] Integrate Hyper features.
