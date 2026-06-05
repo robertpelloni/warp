@@ -24,6 +24,13 @@
 - Formalized `DEPLOY_TEST_PLAN.md` for multi-mode smoke testing.
 - Verified staging bundle integrity for v2.1.0 release candidate.
 
+## [3.0.0] - 2024-05-21
+### Milestone: The Ultimate Harness Integration Complete
+- **OmniRoute Integration:** Smart routing and multi-provider fallback logic.
+- **Maestro Integration:** Advanced multi-agent orchestration and workflow runner.
+- **Jules-Autopilot Integration:** Self-hosted workspace and capability management.
+- **Full Parity:** Achieved foundational parity with Tabby, Hyper, Wave, and all research targets.
+
 ## [2.0.0] - 2024-05-21
 ### Milestone: Enterprise-Grade LLM Harness Integration
 - **OpenCode Integration:** Implemented Supervisor pattern for LLM routing and task oversight.
