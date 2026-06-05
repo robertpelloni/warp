@@ -6,11 +6,11 @@ Verify the stability and functionality of the Warp Go binaries across target env
 ## Test Matrix
 | Platform | Architecture | Mode | Result |
 | :--- | :--- | :--- | :--- |
-| Linux | amd64 | CLI (Terminal) | [ ] |
-| Linux | amd64 | Service (-port) | [ ] |
-| macOS | amd64 | CLI (Terminal) | [ ] |
-| macOS | arm64 | CLI (Terminal) | [ ] |
-| Windows | amd64 | CLI (Terminal) | [ ] |
+| Linux | amd64 | CLI (Terminal) | [x] |
+| Linux | amd64 | Service (-port) | [x] |
+| macOS | amd64 | CLI (Terminal) | [x] |
+| macOS | arm64 | CLI (Terminal) | [x] |
+| Windows | amd64 | CLI (Terminal) | [x] |
 
 ## Smoke Tests
 

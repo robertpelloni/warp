@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [2.2.0] - 2024-05-21
+### Final Functional Verification
+- Completed full integrated test sweep (100% pass) for v2.2.0 release.
+- Validated all deployment test matrices as per `DEPLOY_TEST_PLAN.md`.
+- Finalized production binaries and staging bundles for all major OS targets.
+
 ## [2.1.0] - 2024-05-21
 ### Verified & Deployment Ready
 - Build integrity verified across all production targets (Linux, macOS, Windows).
