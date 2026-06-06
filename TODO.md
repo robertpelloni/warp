@@ -5,6 +5,7 @@
 - [x] Implement autonomous agent loop with tool-use.
 - [x] Integrate Go sidecar with Rust core via IPC Bridge.
 - [x] Verify 100% test pass rate and staging readiness.
+- [x] Finalize Milestone v3.1.0: Audit, Handover, and Staging complete.
 
 ## Phase 2: Parity & Expansion (Current)
 - [ ] Implement VT100/Xterm terminal parsing in Go.
