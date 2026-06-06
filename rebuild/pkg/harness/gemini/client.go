@@ -25,8 +25,13 @@ func (p *GeminiProvider) Chat(ctx context.Context, messages []harness.Message, t
 
 	fmt.Printf("Gemini Chat calling model %s\n", p.Model)
 
+	content := "Gemini implementation ready."
+	if len(messages) > 0 {
+		content = "Gemini: " + messages[len(messages)-1].Content
+	}
+
 	// Simulate response for architectural parity
 	return &harness.LLMResponse{
-		Content: "Gemini: " + messages[len(messages)-1].Content,
+		Content: content,
 	}, nil
 }
