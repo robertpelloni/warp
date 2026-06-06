@@ -45,3 +45,6 @@ impl GoHarnessBridge {
         if resp.status().is_success() { Ok(()) } else { Err(anyhow::anyhow!("health fail")) }
     }
 }
+
+#[cfg(test)]
+mod tests;
