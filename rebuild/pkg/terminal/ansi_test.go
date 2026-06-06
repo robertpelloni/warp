@@ -20,3 +20,11 @@ func TestANSIParser(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
 }
+
+func BenchmarkANSIParser(b *testing.B) {
+	p := NewANSIParser()
+	input := []byte("Hello \x1b[31mRed\x1b[0m Text with \x1b[1;32mExecution\x1b[m codes")
+	for i := 0; i < b.N; i++ {
+		p.Parse(input)
+	}
+}

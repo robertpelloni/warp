@@ -35,3 +35,11 @@ func TestCircuitBreaker(t *testing.T) {
 	if err != nil { t.Errorf("expected nil, got %v", err) }
 	if cb.GetState() != CircuitClosed { t.Errorf("expected closed, got %v", cb.GetState()) }
 }
+
+func BenchmarkCircuitBreakerExecute(b *testing.B) {
+	cb := NewCircuitBreaker(10, 1*time.Second)
+	f := func() error { return nil }
+	for i := 0; i < b.N; i++ {
+		cb.Execute(f)
+	}
+}

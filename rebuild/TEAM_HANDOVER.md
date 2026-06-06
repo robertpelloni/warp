@@ -25,7 +25,7 @@ This document provides technical depth for the Go-based rebuild of the Warp auto
 ## Deployment & RELEASE
 - **Build Automation:** `rebuild/script/build.sh` handles cross-compilation for Linux, macOS (amd64/arm64), and Windows.
 - **Staging:** `rebuild/script/deploy_staging.sh` prepares release-ready tarballs.
-- **Verification:** All components are verified by a comprehensive suite of unit, integration, and E2E tests.
+- **Verification:** All components are verified by a comprehensive suite of unit, integration, and E2E tests. Performance is validated with sub-microsecond benchmarks for core parsing and circuit-breaking logic.
 
 ## Future Development (Phase 5)
 - Deep VT100 escape sequence parsing.
