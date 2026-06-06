@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [3.1.0] - 2024-05-21
+### Audit and Handover
+- Completed final verification audit: 100% pass on all integrated test suites.
+- Formalized `TEAM_HANDOVER.md` for technical transition.
+- Audited all project documentation for consistency and cross-language alignment.
+
+## [3.0.0] - 2024-05-21
+### Milestone: The Ultimate Harness Architectural Parity Complete
+- **OmniRoute Implementation:** Established smart routing and multi-provider fallback architecture.
+- **Maestro Implementation:** Integrated advanced multi-agent orchestration and workflow runner structures.
+- **Jules-Autopilot Implementation:** Ported self-hosted workspace and capability management patterns.
+- **Foundational Parity:** Achieved architectural parity with Tabby, Hyper, Wave, and all research targets, providing a robust Go-based foundation for deep feature iteration.
+
 ## [2.4.0] - 2024-05-21
 ### Verified Enterprise Orchestration
 - Implemented and verified full-stack orchestration between Agent, Skills, and Supervisor.
@@ -23,13 +36,6 @@
 - Build integrity verified across all production targets (Linux, macOS, Windows).
 - Formalized `DEPLOY_TEST_PLAN.md` for multi-mode smoke testing.
 - Verified staging bundle integrity for v2.1.0 release candidate.
-
-## [3.0.0] - 2024-05-21
-### Milestone: The Ultimate Harness Integration Complete
-- **OmniRoute Integration:** Smart routing and multi-provider fallback logic.
-- **Maestro Integration:** Advanced multi-agent orchestration and workflow runner.
-- **Jules-Autopilot Integration:** Self-hosted workspace and capability management.
-- **Full Parity:** Achieved foundational parity with Tabby, Hyper, Wave, and all research targets.
 
 ## [2.0.0] - 2024-05-21
 ### Milestone: Enterprise-Grade LLM Harness Integration

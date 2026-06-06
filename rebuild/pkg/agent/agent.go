@@ -2,8 +2,14 @@ package agent
 
 import (
 	"context"
+	"errors"
+	"sync"
+	"time"
+
 	"github.com/robertpelloni/warp-rebuild/pkg/harness"
 )
+
+var ErrCircuitOpen = errors.New("circuit breaker is open")
 
 type Agent struct {
 	ID      string
@@ -23,10 +29,68 @@ func (a *Agent) RunLoop(ctx context.Context) error {
 	return nil
 }
 
+const (
+	CircuitClosed = iota
+	CircuitOpen
+	CircuitHalfOpen
+)
+
 type CircuitBreaker struct {
-	state int
+	mutex           sync.Mutex
+	state           int
+	failureCount    int
+	threshold       int
+	resetTimeout    time.Duration
+	lastFailureTime time.Time
 }
-func NewCircuitBreaker(t int, d any) *CircuitBreaker { return &CircuitBreaker{} }
-func (cb *CircuitBreaker) Execute(f func() error) error { return f() }
-func (cb *CircuitBreaker) GetState() int { return 0 }
-const CircuitClosed = 0
+
+func NewCircuitBreaker(threshold int, resetTimeout time.Duration) *CircuitBreaker {
+	return &CircuitBreaker{
+		threshold:    threshold,
+		resetTimeout: resetTimeout,
+		state:        CircuitClosed,
+	}
+}
+
+func (cb *CircuitBreaker) GetState() int {
+	cb.mutex.Lock()
+	defer cb.mutex.Unlock()
+	return cb.currentState()
+}
+
+func (cb *CircuitBreaker) currentState() int {
+	if cb.state == CircuitOpen && time.Since(cb.lastFailureTime) > cb.resetTimeout {
+		return CircuitHalfOpen
+	}
+	return cb.state
+}
+
+func (cb *CircuitBreaker) Execute(f func() error) error {
+	cb.mutex.Lock()
+	state := cb.currentState()
+	if state == CircuitOpen {
+		cb.mutex.Unlock()
+		return ErrCircuitOpen
+	}
+	cb.mutex.Unlock()
+
+	err := f()
+
+	cb.mutex.Lock()
+	defer cb.mutex.Unlock()
+
+	if err != nil {
+		cb.failureCount++
+		cb.lastFailureTime = time.Now()
+		if state == CircuitHalfOpen || cb.failureCount >= cb.threshold {
+			cb.state = CircuitOpen
+		}
+		return err
+	}
+
+	if state == CircuitHalfOpen {
+		cb.state = CircuitClosed
+		cb.failureCount = 0
+	}
+	return nil
+}
