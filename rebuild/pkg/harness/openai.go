@@ -15,8 +15,26 @@ func NewOpenAIProvider(apiKey, model string) *OpenAIProvider {
 }
 
 func (p *OpenAIProvider) Chat(ctx context.Context, messages []Message, tools []map[string]interface{}) (*LLMResponse, error) {
-	// Minimal shim for restoration
-	return &LLMResponse{Content: "OpenAI Resp"}, nil
+	var oaMessages []openai.ChatCompletionMessage
+	for _, msg := range messages {
+		oaMessages = append(oaMessages, openai.ChatCompletionMessage{
+			Role:    msg.Role,
+			Content: msg.Content,
+		})
+	}
+
+	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model:    p.model,
+		Messages: oaMessages,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &LLMResponse{
+		Content: resp.Choices[0].Message.Content,
+	}, nil
 }
 
 type MockProvider struct {

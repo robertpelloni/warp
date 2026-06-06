@@ -12,7 +12,7 @@ import (
 func TestEndToEndAgentSession(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	svc := service.NewAgentService(10001)
+	svc := service.NewAgentService(10002, &harness.MockProvider{Responses: []*harness.LLMResponse{{Content: "E2E"}}})
 	go svc.Start(ctx)
 	time.Sleep(100 * time.Millisecond)
 	model := &harness.ModelInfo{ID: "e2e-model"}

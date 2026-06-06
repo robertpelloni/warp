@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/robertpelloni/warp-rebuild/pkg/agent/service"
+	"github.com/robertpelloni/warp-rebuild/pkg/harness"
 	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
 	"golang.org/x/term"
 )
@@ -19,7 +20,17 @@ func main() {
 	flag.Parse()
 
 	if *port != 0 {
-		s := service.NewAgentService(*port)
+		var provider harness.Provider
+		if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
+			provider = harness.NewAnthropicProvider(key, "claude-3-5-sonnet-20240620")
+		} else if key := os.Getenv("OPENAI_API_KEY"); key != "" {
+			provider = harness.NewOpenAIProvider(key, "gpt-4o")
+		} else {
+			provider = &harness.MockProvider{Responses: []*harness.LLMResponse{{Content: "Mock response (no API key found)"}}}
+		}
+
+		s := service.NewAgentService(*port, provider)
+		fmt.Printf("Starting agent service on port %d...\n", *port)
 		s.Start(context.Background())
 		return
 	}
