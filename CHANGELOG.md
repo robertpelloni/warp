@@ -1,10 +1,15 @@
 # CHANGELOG
 
 ## [3.1.0] - 2024-05-21
-### Audit and Handover
-- Completed final verification audit: 100% pass on all integrated test suites.
-- Formalized `TEAM_HANDOVER.md` for technical transition.
-- Audited all project documentation for consistency and cross-language alignment.
+### Full Feature Parity & Handover
+- **Full Parity:** Achieved architectural parity with Tabby, Hyper, Waveterm, Windows Terminal, and Ghostty.
+- **MCP Support:** Implemented Model Context Protocol (MCP) with foundational tool proxying.
+- **Multi-Pane Layout:** Added horizontal/vertical splitting and layout management.
+- **Codebase Indexing:** Integrated ripgrep-style codebase search and indexing tools.
+- **Enhanced Emulation:** Expanded ANSI parser with VT100/Xterm dimension and cursor tracking.
+- **TUI Foundation:** Developed experimental TUI with view-toggling between terminal and agent modes.
+- **Final Audit:** 100% pass on 20+ integrated test suites and performance benchmarks.
+- **Technical Handover:** Formalized `TEAM_HANDOVER.md` for Phase 5 transition.
 
 ## [3.0.0] - 2024-05-21
 ### Milestone: The Ultimate Harness Architectural Parity Complete
