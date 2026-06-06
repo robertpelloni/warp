@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -54,9 +55,11 @@ func (p *OpenAIProvider) Chat(ctx context.Context, messages []Message, tools []m
 
 	if len(resp.Choices[0].Message.ToolCalls) > 0 {
 		tc := resp.Choices[0].Message.ToolCalls[0]
+		var args map[string]interface{}
+		_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
 		res.ToolCall = &ToolCall{
 			Name: tc.Function.Name,
-			Args: make(map[string]interface{}), // Simplified: would parse JSON in production
+			Args: args,
 		}
 	}
 
