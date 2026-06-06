@@ -1,9 +1,11 @@
 package agent
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
+	"github.com/robertpelloni/warp-rebuild/pkg/harness"
 )
 
 func TestCircuitBreaker(t *testing.T) {
@@ -41,5 +43,16 @@ func BenchmarkCircuitBreakerExecute(b *testing.B) {
 	f := func() error { return nil }
 	for i := 0; i < b.N; i++ {
 		cb.Execute(f)
+	}
+}
+
+func BenchmarkAgentRunLoop(b *testing.B) {
+	ctx := context.Background()
+	model := &harness.ModelInfo{ID: "bench"}
+	mockProvider := &harness.MockProvider{Responses: []*harness.LLMResponse{{Content: "done"}}}
+
+	for i := 0; i < b.N; i++ {
+		a := NewAgent("bench", "sys", model, mockProvider)
+		a.RunLoop(ctx)
 	}
 }

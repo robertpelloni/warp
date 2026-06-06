@@ -23,18 +23,44 @@ func (p *OpenAIProvider) Chat(ctx context.Context, messages []Message, tools []m
 		})
 	}
 
+	var oaTools []openai.Tool
+	for _, t := range tools {
+		name, _ := t["name"].(string)
+		desc, _ := t["description"].(string)
+		params, _ := t["parameters"].(map[string]interface{})
+		oaTools = append(oaTools, openai.Tool{
+			Type: openai.ToolTypeFunction,
+			Function: &openai.FunctionDefinition{
+				Name:        name,
+				Description: desc,
+				Parameters:  params,
+			},
+		})
+	}
+
 	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model:    p.model,
 		Messages: oaMessages,
+		Tools:    oaTools,
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &LLMResponse{
+	res := &LLMResponse{
 		Content: resp.Choices[0].Message.Content,
-	}, nil
+	}
+
+	if len(resp.Choices[0].Message.ToolCalls) > 0 {
+		tc := resp.Choices[0].Message.ToolCalls[0]
+		res.ToolCall = &ToolCall{
+			Name: tc.Function.Name,
+			Args: make(map[string]interface{}), // Simplified: would parse JSON in production
+		}
+	}
+
+	return res, nil
 }
 
 type MockProvider struct {

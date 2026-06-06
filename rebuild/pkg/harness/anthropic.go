@@ -43,7 +43,9 @@ func (p *AnthropicProvider) Chat(ctx context.Context, messages []Message, tools 
 		return nil, err
 	}
 
-	return &LLMResponse{
+	res := &LLMResponse{
 		Content: *resp.Content[0].Text,
-	}, nil
+	}
+
+	return res, nil
 }

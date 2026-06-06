@@ -8,6 +8,7 @@ import (
 	"sync"
 	"github.com/robertpelloni/warp-rebuild/pkg/harness"
 	"github.com/robertpelloni/warp-rebuild/pkg/agent"
+	"github.com/robertpelloni/warp-rebuild/pkg/agent/tools"
 )
 
 type AgentService struct {
@@ -27,6 +28,8 @@ func NewAgentService(port int, provider harness.Provider) *AgentService {
 			return
 		}
 		a := agent.NewAgent("svc", "You are a helpful assistant.", &harness.ModelInfo{ID: "current"}, provider)
+		a.AddTool(&tools.ReadFileTool{})
+		a.AddTool(&tools.ExecuteCommandTool{})
 		a.History = append(a.History, harness.Message{Role: "user", Content: req.Prompt})
 		if err := a.RunLoop(r.Context()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
