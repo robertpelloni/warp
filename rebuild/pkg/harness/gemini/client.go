@@ -17,7 +17,16 @@ func NewGeminiProvider(apiKey, model string) *GeminiProvider {
 }
 
 func (p *GeminiProvider) Chat(ctx context.Context, messages []harness.Message, tools []map[string]interface{}) (*harness.LLMResponse, error) {
-	// Structural implementation for Gemini-specific API orchestration.
+	// For now, we use a structural mock that simulates the Gemini response format.
+	// In a real implementation, this would use the "google.golang.org/genai" package.
+	if p.APIKey == "" {
+		return nil, fmt.Errorf("gemini api key is required")
+	}
+
 	fmt.Printf("Gemini Chat calling model %s\n", p.Model)
-	return &harness.LLMResponse{Content: "Gemini implementation ready."}, nil
+
+	// Simulate response for architectural parity
+	return &harness.LLMResponse{
+		Content: "Gemini: " + messages[len(messages)-1].Content,
+	}, nil
 }
