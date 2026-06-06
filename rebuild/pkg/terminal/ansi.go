@@ -6,10 +6,17 @@ import (
 
 type ANSIParser struct {
 	Buffer bytes.Buffer
+	State  int
 }
 
+const (
+	StateNormal = iota
+	StateESC
+	StateCSI
+)
+
 func NewANSIParser() *ANSIParser {
-	return &ANSIParser{}
+	return &ANSIParser{State: StateNormal}
 }
 
 // Parse processes raw bytes and extracts human-readable text,
@@ -17,27 +24,28 @@ func NewANSIParser() *ANSIParser {
 // This is a foundational state machine for terminal emulation.
 func (p *ANSIParser) Parse(data []byte) string {
 	var result bytes.Buffer
-	i := 0
-	for i < len(data) {
-		if data[i] == 0x1b { // ESC
-			if i+1 < len(data) && data[i+1] == '[' {
-				// CSI sequence
-				j := i + 2
-				for j < len(data) && (data[j] >= 0x30 && data[j] <= 0x3f) {
-					j++
-				}
-				for j < len(data) && (data[j] >= 0x20 && data[j] <= 0x2f) {
-					j++
-				}
-				if j < len(data) && (data[j] >= 0x40 && data[j] <= 0x7e) {
-					// End of sequence
-					i = j + 1
-					continue
-				}
+	for _, b := range data {
+		switch p.State {
+		case StateNormal:
+			if b == 0x1b {
+				p.State = StateESC
+			} else {
+				result.WriteByte(b)
 			}
+		case StateESC:
+			if b == '[' {
+				p.State = StateCSI
+			} else {
+				// Non-CSI escape sequence, just return to normal for now
+				p.State = StateNormal
+			}
+		case StateCSI:
+			if b >= 0x40 && b <= 0x7e {
+				// End of CSI sequence
+				p.State = StateNormal
+			}
+			// Intermediate bytes are ignored for stripping
 		}
-		result.WriteByte(data[i])
-		i++
 	}
 	return result.String()
 }
