@@ -3,7 +3,7 @@ package terminal
 import "testing"
 
 func TestANSIParser(t *testing.T) {
-	p := NewANSIParser()
+	p := NewANSIParser(80, 24)
 
 	input := []byte("Hello \x1b[31mRed\x1b[0m Text")
 	expected := "Hello Red Text"
@@ -22,7 +22,7 @@ func TestANSIParser(t *testing.T) {
 }
 
 func BenchmarkANSIParser(b *testing.B) {
-	p := NewANSIParser()
+	p := NewANSIParser(80, 24)
 	input := []byte("Hello \x1b[31mRed\x1b[0m Text with \x1b[1;32mExecution\x1b[m codes")
 	for i := 0; i < b.N; i++ {
 		p.Parse(input)

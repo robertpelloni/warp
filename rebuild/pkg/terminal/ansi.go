@@ -7,6 +7,10 @@ import (
 type ANSIParser struct {
 	Buffer bytes.Buffer
 	State  int
+	Cols   int
+	Rows   int
+	X      int
+	Y      int
 }
 
 const (
@@ -15,8 +19,8 @@ const (
 	StateCSI
 )
 
-func NewANSIParser() *ANSIParser {
-	return &ANSIParser{State: StateNormal}
+func NewANSIParser(cols, rows int) *ANSIParser {
+	return &ANSIParser{State: StateNormal, Cols: cols, Rows: rows}
 }
 
 // Parse processes raw bytes and extracts human-readable text,

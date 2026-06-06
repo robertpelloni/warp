@@ -8,10 +8,11 @@ import (
 
 type model struct {
 	content string
+	view    string
 }
 
 func initialModel() model {
-	return model{content: "Warp Ultimate LLM Harness Rebuild\nInitializing TUI..."}
+	return model{content: "Warp Ultimate LLM Harness Rebuild", view: "terminal"}
 }
 
 func (m model) Init() tea.Cmd {
@@ -36,5 +37,11 @@ var style = lipgloss.NewStyle().
 	Padding(1, 2)
 
 func (m model) View() string {
-	return fmt.Sprintf("\n%s\n\nPress 'q' to exit back to terminal.\n", style.Render(m.content))
+	var body string
+	if m.view == "terminal" {
+		body = " [ TERMINAL VIEW ]\n" + m.content
+	} else {
+		body = " [ AGENT VIEW ]\n" + m.content
+	}
+	return fmt.Sprintf("\n%s\n\nPress 'v' to toggle views, 'q' to exit.\n", style.Render(body))
 }
