@@ -1,6 +1,9 @@
 package terminal
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 type Cell struct {
 	Char     rune
@@ -36,12 +39,12 @@ func (b *ScreenBuffer) SetCell(x, y int, char rune) {
 func (b *ScreenBuffer) GetString() string {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	var res string
+	var sb strings.Builder
 	for _, row := range b.Grid {
 		for _, cell := range row {
-			res += string(cell.Char)
+			sb.WriteRune(cell.Char)
 		}
-		res += "\n"
+		sb.WriteByte('\n')
 	}
-	return res
+	return sb.String()
 }
