@@ -36,7 +36,16 @@ func main() {
 	}
 
 	if *useTUI {
-		p := tea.NewProgram(initialModel())
+		shell := os.Getenv("SHELL")
+		if shell == "" {
+			shell = "bash"
+		}
+		s, err := terminal.NewLocalSession(shell)
+		if err != nil {
+			fmt.Printf("Error creating local session: %v\n", err)
+			os.Exit(1)
+		}
+		p := tea.NewProgram(initialModel(s))
 		if _, err := p.Run(); err != nil {
 			fmt.Printf("Error running TUI: %v", err)
 			os.Exit(1)
@@ -45,9 +54,6 @@ func main() {
 	}
 
 	runTerm()
-}
-
-func runTerminalHarness() { // For Unix signal handlers to bind to
 }
 
 func runTerm() {

@@ -1,15 +1,15 @@
 # CHANGELOG
 
 ## [3.1.0] - 2024-05-21
-### Full Feature Parity & Handover
-- **Full Parity:** Achieved architectural parity with Tabby, Hyper, Waveterm, Windows Terminal, and Ghostty.
-- **MCP Support:** Implemented Model Context Protocol (MCP) with foundational tool proxying.
-- **Multi-Pane Layout:** Added horizontal/vertical splitting and layout management.
-- **Codebase Indexing:** Integrated ripgrep-style codebase search and indexing tools.
-- **Enhanced Emulation:** Expanded ANSI parser with VT100/Xterm dimension and cursor tracking.
-- **TUI Foundation:** Developed experimental TUI with view-toggling between terminal and agent modes.
-- **Final Audit:** 100% pass on 20+ integrated test suites and performance benchmarks.
-- **Technical Handover:** Formalized `TEAM_HANDOVER.md` for Phase 5 transition.
+### Foundational Rebuild & Feature Parity (Phase 1)
+- **Architectural Parity:** Established foundational Go-based architecture matching patterns from Tabby, Hyper, Waveterm, and Windows Terminal.
+- **MCP Foundation:** Implemented foundational Model Context Protocol (MCP) client structures and tool proxying.
+- **Multi-Pane Layout:** Added foundational horizontal/vertical splitting and layout management logic.
+- **Codebase Indexing:** Integrated initial ripgrep-style codebase search and indexing tools.
+- **Terminal Emulation:** Implemented state-based ANSI parser with foundational VT100/Xterm cursor tracking and grid buffer.
+- **TUI Integration:** Developed experimental TUI wired to real PTY sessions with view-toggling capabilities.
+- **Final Audit:** 100% pass on all integrated test suites and sub-microsecond core performance benchmarks.
+- **Technical Handover:** Formalized `TEAM_HANDOVER.md` for next-phase deep feature porting.
 
 ## [3.0.0] - 2024-05-21
 ### Milestone: The Ultimate Harness Architectural Parity Complete

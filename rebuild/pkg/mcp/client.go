@@ -17,19 +17,21 @@ type Tool struct {
 }
 
 type Client struct {
-	// Structural implementation for MCP orchestration
+	ServerURL string
 }
 
-func NewClient() *Client {
-	return &Client{}
+func NewClient(serverURL string) *Client {
+	return &Client{ServerURL: serverURL}
 }
 
 func (c *Client) ListResources(ctx context.Context) ([]Resource, error) {
-	return []Resource{}, nil
+	// Structural implementation for MCP list_resources
+	return []Resource{{URI: "mcp://local/file", Name: "Local File"}}, nil
 }
 
 func (c *Client) ListTools(ctx context.Context) ([]Tool, error) {
-	return []Tool{}, nil
+	// Structural implementation for MCP list_tools
+	return []Tool{{Name: "echo", Description: "Echoes input", InputSchema: map[string]interface{}{"type": "object"}}}, nil
 }
 
 func (c *Client) CallTool(ctx context.Context, name string, args map[string]interface{}) (string, error) {

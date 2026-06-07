@@ -35,6 +35,19 @@ func (p *ANSIParser) Parse(data []byte) string {
 				p.State = StateESC
 			} else {
 				result.WriteByte(b)
+				if b == '\n' {
+					p.X = 0
+					p.Y++
+				} else if b != '\r' {
+					p.X++
+					if p.X >= p.Cols {
+						p.X = 0
+						p.Y++
+					}
+				}
+				if p.Y >= p.Rows {
+					p.Y = p.Rows - 1
+				}
 			}
 		case StateESC:
 			if b == '[' {

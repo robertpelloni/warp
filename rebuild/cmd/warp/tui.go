@@ -1,18 +1,21 @@
 package main
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"fmt"
+	"github.com/robertpelloni/warp-rebuild/pkg/terminal"
 )
 
 type model struct {
 	content string
 	view    string
+	session terminal.Session
 }
 
-func initialModel() model {
-	return model{content: "Warp Ultimate LLM Harness Rebuild", view: "terminal"}
+func initialModel(s terminal.Session) model {
+	return model{content: "Warp Ultimate LLM Harness Rebuild", view: "terminal", session: s}
 }
 
 func (m model) Init() tea.Cmd {
