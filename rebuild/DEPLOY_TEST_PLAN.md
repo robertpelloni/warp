@@ -11,6 +11,7 @@ Verify the stability and functionality of the Warp Go binaries across target env
 | macOS | amd64 | CLI (Terminal) | [x] |
 | macOS | arm64 | CLI (Terminal) | [x] |
 | Windows | amd64 | CLI (Terminal) | [x] |
+| Windows | amd64 | Service (-port) | [x] |
 
 ## Smoke Tests
 

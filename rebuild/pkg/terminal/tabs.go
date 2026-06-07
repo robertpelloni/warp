@@ -1,6 +1,9 @@
 package terminal
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Tab struct {
 	ID      string
@@ -21,7 +24,8 @@ func NewTabManager() *TabManager {
 func (m *TabManager) AddTab(title string, session Session) *Tab {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	tab := &Tab{ID: "tab", Title: title, Session: session}
+	id := fmt.Sprintf("tab-%d", len(m.tabs))
+	tab := &Tab{ID: id, Title: title, Session: session}
 	m.tabs = append(m.tabs, tab)
 	if m.active == -1 { m.active = 0 }
 	return tab
