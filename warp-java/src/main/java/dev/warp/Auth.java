@@ -4,11 +4,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Auth {
-    // In a real application, this would be retrieved from a database.
-    private static final String DUMMY_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
     public static boolean authenticateUser(String username, String password) {
         System.out.println("Warp Java: Authenticating user " + username);
+
+        String expectedUser = System.getenv("WARP_ADMIN_USER");
+        String expectedHash = System.getenv("WARP_ADMIN_HASH");
+
+        if (expectedUser == null || expectedHash == null) {
+            System.out.println("Warning: Authentication not configured");
+            return false;
+        }
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -22,7 +27,7 @@ public class Auth {
             }
 
             String passwordHash = hexString.toString();
-            return "admin".equals(username) && DUMMY_HASH.equals(passwordHash);
+            return expectedUser.equals(username) && expectedHash.equals(passwordHash);
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

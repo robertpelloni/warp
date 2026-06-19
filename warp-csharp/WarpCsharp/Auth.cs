@@ -6,12 +6,18 @@ namespace WarpCsharp
 {
     public class Auth
     {
-        // In a real application, this would be retrieved from a database.
-        private const string DummyHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
         public static bool AuthenticateUser(string username, string password)
         {
             Console.WriteLine($"Warp C#: Authenticating user {username}");
+
+            string expectedUser = Environment.GetEnvironmentVariable("WARP_ADMIN_USER");
+            string expectedHash = Environment.GetEnvironmentVariable("WARP_ADMIN_HASH");
+
+            if (string.IsNullOrEmpty(expectedUser) || string.IsNullOrEmpty(expectedHash))
+            {
+                Console.WriteLine("Warning: Authentication not configured");
+                return false;
+            }
 
             using (SHA256 sha256Hash = SHA256.Create())
             {
@@ -23,7 +29,7 @@ namespace WarpCsharp
                 }
                 string passwordHash = builder.ToString();
 
-                return username == "admin" && passwordHash == DummyHash;
+                return username == expectedUser && passwordHash == expectedHash;
             }
         }
     }
