@@ -6,6 +6,14 @@ namespace WarpCsharp
     {
         static void Main(string[] args)
         {
+            // Run manual tests if requested via hidden flag
+            if (args.Length > 0 && args[0] == "--test-auth")
+            {
+                Tests.AuthTests.RunTests();
+                Console.WriteLine("C# Auth Tests Passed");
+                return;
+            }
+
             if (args.Length == 0)
             {
                 Console.WriteLine("Warp C# Initialized");
