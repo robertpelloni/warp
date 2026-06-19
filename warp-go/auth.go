@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -22,5 +23,8 @@ func AuthenticateUser(username, password string) bool {
 	hasher.Write([]byte(password))
 	passwordHash := hex.EncodeToString(hasher.Sum(nil))
 
-	return username == expectedUser && passwordHash == expectedHash
+	userMatch := subtle.ConstantTimeCompare([]byte(username), []byte(expectedUser)) == 1
+	hashMatch := subtle.ConstantTimeCompare([]byte(passwordHash), []byte(expectedHash)) == 1
+
+	return userMatch && hashMatch
 }

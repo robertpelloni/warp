@@ -27,7 +27,11 @@ public class Auth {
             }
 
             String passwordHash = hexString.toString();
-            return expectedUser.equals(username) && expectedHash.equals(passwordHash);
+
+            boolean userMatch = MessageDigest.isEqual(username.getBytes(), expectedUser.getBytes());
+            boolean hashMatch = MessageDigest.isEqual(passwordHash.getBytes(), expectedHash.getBytes());
+
+            return userMatch && hashMatch;
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

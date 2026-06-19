@@ -29,7 +29,10 @@ namespace WarpCsharp
                 }
                 string passwordHash = builder.ToString();
 
-                return username == expectedUser && passwordHash == expectedHash;
+                bool userMatch = CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(username), Encoding.UTF8.GetBytes(expectedUser));
+                bool hashMatch = CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(passwordHash), Encoding.UTF8.GetBytes(expectedHash));
+
+                return userMatch && hashMatch;
             }
         }
     }
