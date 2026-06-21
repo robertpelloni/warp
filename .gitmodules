@@ -1,6 +1,0 @@
-[submodule "submodules/just-every-code"]
-	path = submodules/just-every-code
-	url = https://github.com/just-every/code
-[submodule "submodules/pi-mono"]
-	path = submodules/pi-mono
-	url = https://github.com/badlogic/pi-mono

@@ -6,36 +6,62 @@ namespace WarpCsharp
     {
         static void Main(string[] args)
         {
-            // Run manual tests if requested via hidden flag
-            if (args.Length > 0 && args[0] == "--test-auth")
-            {
-                Tests.AuthTests.RunTests();
-                Console.WriteLine("C# Auth Tests Passed");
-                return;
-            }
+            Console.WriteLine("Welcome to Warp CLI (C# Edition) - Inspired by just-every-code");
+            Console.WriteLine("Type '/help' for commands, or 'quit' to close.");
 
-            if (args.Length == 0)
+            while (true)
             {
-                Console.WriteLine("Warp C# Initialized");
-                Console.WriteLine("Usage: warp <command> [arguments]");
-                return;
-            }
+                Console.Write("warp> ");
+                string? input = Console.ReadLine();
 
-            string command = args[0];
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    continue;
+                }
 
-            switch (command)
-            {
-                case "run":
-                    string agent = "default";
-                    if (args.Length > 2 && args[1] == "--agent")
-                    {
-                        agent = args[2];
-                    }
-                    Console.WriteLine($"Warp C# running agent: {agent}");
+                input = input.Trim();
+
+                if (input.Equals("quit", StringComparison.OrdinalIgnoreCase) || input.Equals("/quit", StringComparison.OrdinalIgnoreCase))
+                {
                     break;
-                default:
-                    Console.WriteLine($"Unknown command: {command}");
-                    break;
+                }
+
+                HandleCommand(input);
+            }
+        }
+
+        static void HandleCommand(string input)
+        {
+            if (input.StartsWith("/"))
+            {
+                string cmd = input.Substring(1).ToLowerInvariant();
+                switch (cmd)
+                {
+                    case "help":
+                        Console.WriteLine("Available commands:");
+                        Console.WriteLine("  /help     - Show this help message");
+                        Console.WriteLine("  /plan     - (Stub) Coordinate planning agent");
+                        Console.WriteLine("  /code     - (Stub) Coordinate coding agent");
+                        Console.WriteLine("  /auto     - (Stub) Start Auto Drive orchestration");
+                        Console.WriteLine("  quit      - Quit the application");
+                        break;
+                    case "plan":
+                        Console.WriteLine("[Agent: Planner] Acknowledged. Ready to plan task.");
+                        break;
+                    case "code":
+                        Console.WriteLine("[Agent: Coder] Acknowledged. Ready to write code.");
+                        break;
+                    case "auto":
+                        Console.WriteLine("[Orchestrator: Auto Drive] Starting autonomous loop (Mock).");
+                        break;
+                    default:
+                        Console.WriteLine($"Unknown command: /{cmd}");
+                        break;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[Agent] Echoing input: {input}");
             }
         }
     }

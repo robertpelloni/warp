@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "crates/warp-cli",
   "crates/*",
   "app",
 ]
@@ -9,6 +10,7 @@ resolver = "2"
 # wasm binaries and not something we want to regularly compile or run
 # tests against) and integration (since it is only used for testing).
 default-members = [
+  "crates/warp-cli",
   "app",
   "crates/channel_versions",
   "crates/command",

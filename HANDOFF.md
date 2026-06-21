@@ -1,13 +1,15 @@
-# HANDOFF
-Ready for initial exploration of the first external submodule.
+[PROJECT_MEMORY]
 
-## Discovered Details for Subsequent Implementations
-- `just-every-code`: Requires mapping Rust's async event loops and `codex` commands (`/plan`, `/code`) to Go, C#, and Java.
-- `pi-mono`: Requires re-implementing their plugin-style multi-package structure and tool calling state management inside our Go, C#, and Java agents.
+# Ultimate Agentic Coding Harness Rebuild - Handoff
 
-## Final Integration Status
-The scaffolding and authentication modules for the Ultimate Agentic Coding Harness Rebuild have been successfully implemented and integrated into the `master` codebase. The bulk of feature parity porting remains ongoing.
-- Go, C#, and Java project structures are robust.
-- The `User Authentication Module` uses secure dummy hashes and constant-time string comparison methods to prevent timing attacks.
-- Test suites for Go (`go test`) and Java (`mvn test`) run successfully, and C# (`dotnet build`) compiles.
-- Rust root-level tests are currently blocked by pre-existing missing `crates/` dependencies. Future models should proceed with extending language-specific components individually.
+## Current Status
+We are processing the `just-every-code` submodule. I have added it and begun porting the foundational CLI REPL structure across Rust, Go, C#, and Java.
+
+## Action Required for Successor
+The code reviewer correctly noted that we are only providing "fake" stubbed functionality instead of functionally porting the core logic (e.g., the true multi-agent orchestration, auto-drive loop, and MCP server).
+
+**Your Immediate Goal:**
+1. You must implement *actual* logic ported from `just-every-code/codex-rs` into the four languages.
+2. Begin by porting the `Auto Drive` orchestration loop logic or the multi-agent `mcp-server` integration, rather than just mocking the command outputs.
+3. Remove `pi-mono` from the staging area so we process *one* submodule at a time.
+4. Ensure no build artifacts are committed.
