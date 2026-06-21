@@ -8,12 +8,30 @@ namespace WarpCsharp
         Sandboxed
     }
 
+    public enum AgentStatus
+    {
+        PendingInit,
+        Running,
+        Completed,
+        Interrupted,
+        Errored,
+        Shutdown
+    }
+
+    public class TurnContext
+    {
+        public string TurnId { get; set; } = string.Empty;
+        public string SessionId { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string WorkingDir { get; set; } = string.Empty;
+        public string PermissionsProfile { get; set; } = string.Empty;
+    }
+
     public class ToolCtx
     {
         public string CallId { get; set; } = string.Empty;
         public string ToolName { get; set; } = string.Empty;
-        public string SessionId { get; set; } = string.Empty;
-        public string TurnId { get; set; } = string.Empty;
+        public TurnContext TurnContext { get; set; } = new TurnContext();
     }
 
     public class SandboxAttempt
@@ -41,7 +59,7 @@ namespace WarpCsharp
         public string Run(string req, SandboxAttempt attempt, ToolCtx ctx)
         {
             string mode = attempt.IsSandboxed ? "Sandboxed" : "Unsandboxed";
-            return $"[{ctx.ToolName}] Executed shell command '{req}' in {mode} mode (CallID: {ctx.CallId})";
+            return $"[{ctx.ToolName}] Executed shell command '{req}' in {mode} mode (CallID: {ctx.CallId}, TurnID: {ctx.TurnContext.TurnId})";
         }
     }
 
@@ -60,11 +78,67 @@ namespace WarpCsharp
             var attempt = new SandboxAttempt
             {
                 IsSandboxed = runtime.SandboxPreference == SandboxPreference.Sandboxed,
-                Cwd = "/workspace"
+                Cwd = ctx.TurnContext.WorkingDir
             };
 
             // 3. Execution
             return runtime.Run(req, attempt, ctx);
+        }
+    }
+
+    public class AgentSession
+    {
+        public string SessionId { get; private set; }
+        public AgentStatus Status { get; set; }
+        private ToolOrchestrator _orchestrator;
+        private int _turnCounter;
+
+        public AgentSession(string sessionId)
+        {
+            SessionId = sessionId;
+            Status = AgentStatus.PendingInit;
+            _orchestrator = new ToolOrchestrator();
+            _turnCounter = 0;
+        }
+
+        public void SteerInput(string input)
+        {
+            Status = AgentStatus.Running;
+            _turnCounter++;
+            string turnId = $"turn_{_turnCounter}";
+
+            Console.WriteLine($"[Agent] Received input: '{input}'. Generating TurnContext ({turnId})...");
+
+            var turnContext = new TurnContext
+            {
+                TurnId = turnId,
+                SessionId = SessionId,
+                Model = "gpt-5.5",
+                WorkingDir = "/workspace",
+                PermissionsProfile = "default"
+            };
+
+            string toolReq = $"echo '{input}'";
+            var ctx = new ToolCtx
+            {
+                CallId = $"call_{_turnCounter}",
+                ToolName = "shell",
+                TurnContext = turnContext
+            };
+
+            var runtime = new ShellCommandRuntime();
+
+            try
+            {
+                string result = _orchestrator.ExecuteTool(runtime, toolReq, ctx);
+                Console.WriteLine($"[Agent] Turn executed. Result: {result}");
+                Status = AgentStatus.Completed;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Agent] Turn failed. Error: {ex.Message}");
+                Status = AgentStatus.Errored;
+            }
         }
     }
 
@@ -75,7 +149,7 @@ namespace WarpCsharp
             Console.WriteLine("Welcome to Warp CLI (C# Edition) - Inspired by just-every-code");
             Console.WriteLine("Type '/help' for commands, or 'quit' to close.");
 
-            var orchestrator = new ToolOrchestrator();
+            var agent = new AgentSession("sess_123");
 
             while (true)
             {
@@ -91,14 +165,15 @@ namespace WarpCsharp
 
                 if (input.Equals("quit", StringComparison.OrdinalIgnoreCase) || input.Equals("/quit", StringComparison.OrdinalIgnoreCase))
                 {
+                    agent.Status = AgentStatus.Shutdown;
                     break;
                 }
 
-                HandleCommand(input, orchestrator);
+                HandleCommand(input, agent);
             }
         }
 
-        static void HandleCommand(string input, ToolOrchestrator orchestrator)
+        static void HandleCommand(string input, AgentSession agent)
         {
             if (input.StartsWith("/"))
             {
@@ -121,34 +196,17 @@ namespace WarpCsharp
                     case "help":
                         Console.WriteLine("Available commands:");
                         Console.WriteLine("  /help        - Show this help message");
-                        Console.WriteLine("  /shell <cmd> - Run a command through the ToolOrchestrator");
+                        Console.WriteLine("  /prompt <msg>- Send a natural language prompt to the agent");
                         Console.WriteLine("  quit         - Quit the application");
                         break;
-                    case "shell":
+                    case "prompt":
                         if (string.IsNullOrEmpty(args))
                         {
-                            Console.WriteLine("[Error] /shell requires a command.");
+                            Console.WriteLine("[Error] /prompt requires a message.");
                         }
                         else
                         {
-                            var ctx = new ToolCtx
-                            {
-                                CallId = "call_abc123",
-                                ToolName = "shell",
-                                SessionId = "sess_1",
-                                TurnId = "turn_1"
-                            };
-                            var runtime = new ShellCommandRuntime();
-
-                            try
-                            {
-                                string result = orchestrator.ExecuteTool(runtime, args, ctx);
-                                Console.WriteLine($"[Result] {result}");
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"[Error] {ex.Message}");
-                            }
+                            agent.SteerInput(args);
                         }
                         break;
                     default:
@@ -158,7 +216,7 @@ namespace WarpCsharp
             }
             else
             {
-                Console.WriteLine($"[Agent] Echoing input: {input}");
+                agent.SteerInput(input);
             }
         }
     }

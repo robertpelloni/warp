@@ -7,17 +7,40 @@ enum SandboxPreference {
     Sandboxed
 }
 
+enum AgentStatus {
+    PendingInit,
+    Running,
+    Completed,
+    Interrupted,
+    Errored,
+    Shutdown
+}
+
+class TurnContext {
+    public String turnId;
+    public String sessionId;
+    public String model;
+    public String workingDir;
+    public String permissionsProfile;
+
+    public TurnContext(String turnId, String sessionId, String model, String workingDir, String permissionsProfile) {
+        this.turnId = turnId;
+        this.sessionId = sessionId;
+        this.model = model;
+        this.workingDir = workingDir;
+        this.permissionsProfile = permissionsProfile;
+    }
+}
+
 class ToolCtx {
     public String callId;
     public String toolName;
-    public String sessionId;
-    public String turnId;
+    public TurnContext turnContext;
 
-    public ToolCtx(String callId, String toolName, String sessionId, String turnId) {
+    public ToolCtx(String callId, String toolName, TurnContext turnContext) {
         this.callId = callId;
         this.toolName = toolName;
-        this.sessionId = sessionId;
-        this.turnId = turnId;
+        this.turnContext = turnContext;
     }
 }
 
@@ -57,8 +80,8 @@ class ShellCommandRuntime implements ToolRuntime<String, String> {
     @Override
     public String run(String req, SandboxAttempt attempt, ToolCtx ctx) {
         String mode = attempt.isSandboxed ? "Sandboxed" : "Unsandboxed";
-        return String.format("[%s] Executed shell command '%s' in %s mode (CallID: %s)",
-                ctx.toolName, req, mode, ctx.callId);
+        return String.format("[%s] Executed shell command '%s' in %s mode (CallID: %s, TurnID: %s)",
+                ctx.toolName, req, mode, ctx.callId, ctx.turnContext.turnId);
     }
 }
 
@@ -73,11 +96,54 @@ class ToolOrchestrator {
         // 2. Sandbox Selection
         SandboxAttempt attempt = new SandboxAttempt(
                 runtime.getSandboxPreference() == SandboxPreference.Sandboxed,
-                "/workspace"
+                ctx.turnContext.workingDir
         );
 
         // 3. Execution
         return runtime.run(req, attempt, ctx);
+    }
+}
+
+class AgentSession {
+    public String sessionId;
+    public AgentStatus status;
+    private ToolOrchestrator orchestrator;
+    private int turnCounter;
+
+    public AgentSession(String sessionId) {
+        this.sessionId = sessionId;
+        this.status = AgentStatus.PendingInit;
+        this.orchestrator = new ToolOrchestrator();
+        this.turnCounter = 0;
+    }
+
+    public void steerInput(String input) {
+        this.status = AgentStatus.Running;
+        this.turnCounter++;
+        String turnId = "turn_" + this.turnCounter;
+
+        System.out.printf("[Agent] Received input: '%s'. Generating TurnContext (%s)...%n", input, turnId);
+
+        TurnContext turnContext = new TurnContext(
+                turnId,
+                this.sessionId,
+                "gpt-5.5",
+                "/workspace",
+                "default"
+        );
+
+        String toolReq = "echo '" + input + "'";
+        ToolCtx ctx = new ToolCtx("call_" + this.turnCounter, "shell", turnContext);
+        ShellCommandRuntime runtime = new ShellCommandRuntime();
+
+        try {
+            String result = orchestrator.executeTool(runtime, toolReq, ctx);
+            System.out.println("[Agent] Turn executed. Result: " + result);
+            this.status = AgentStatus.Completed;
+        } catch (Exception e) {
+            System.out.println("[Agent] Turn failed. Error: " + e.getMessage());
+            this.status = AgentStatus.Errored;
+        }
     }
 }
 
@@ -86,7 +152,7 @@ public class Main {
         System.out.println("Welcome to Warp CLI (Java Edition) - Inspired by just-every-code");
         System.out.println("Type '/help' for commands, or 'quit' to close.");
 
-        ToolOrchestrator orchestrator = new ToolOrchestrator();
+        AgentSession agent = new AgentSession("sess_123");
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -101,15 +167,16 @@ public class Main {
             }
 
             if (input.equalsIgnoreCase("quit") || input.equalsIgnoreCase("/quit")) {
+                agent.status = AgentStatus.Shutdown;
                 break;
             }
 
-            handleCommand(input, orchestrator);
+            handleCommand(input, agent);
         }
         scanner.close();
     }
 
-    private static void handleCommand(String input, ToolOrchestrator orchestrator) {
+    private static void handleCommand(String input, AgentSession agent) {
         if (input.startsWith("/")) {
             String[] parts = input.substring(1).split(" ", 2);
             String cmd = parts[0].toLowerCase();
@@ -119,22 +186,14 @@ public class Main {
                 case "help":
                     System.out.println("Available commands:");
                     System.out.println("  /help        - Show this help message");
-                    System.out.println("  /shell <cmd> - Run a command through the ToolOrchestrator");
+                    System.out.println("  /prompt <msg>- Send a natural language prompt to the agent");
                     System.out.println("  quit         - Quit the application");
                     break;
-                case "shell":
+                case "prompt":
                     if (args.isEmpty()) {
-                        System.out.println("[Error] /shell requires a command.");
+                        System.out.println("[Error] /prompt requires a message.");
                     } else {
-                        ToolCtx ctx = new ToolCtx("call_abc123", "shell", "sess_1", "turn_1");
-                        ShellCommandRuntime runtime = new ShellCommandRuntime();
-
-                        try {
-                            String result = orchestrator.executeTool(runtime, args, ctx);
-                            System.out.println("[Result] " + result);
-                        } catch (Exception e) {
-                            System.out.println("[Error] " + e.getMessage());
-                        }
+                        agent.steerInput(args);
                     }
                     break;
                 default:
@@ -142,7 +201,7 @@ public class Main {
                     break;
             }
         } else {
-            System.out.println("[Agent] Echoing input: " + input);
+            agent.steerInput(input);
         }
     }
 }

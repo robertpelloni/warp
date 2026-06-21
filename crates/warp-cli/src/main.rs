@@ -1,8 +1,7 @@
 use std::io::{self, Write};
 
-
-
 // Core Abstractions Ported from codex-rs/core/src/tools/sandboxing.rs
+// and codex-rs/core/src/session/turn_context.rs
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SandboxPreference {
@@ -11,11 +10,29 @@ pub enum SandboxPreference {
 }
 
 #[derive(Debug, Clone)]
+pub enum AgentStatus {
+    PendingInit,
+    Running,
+    Completed(String),
+    Interrupted,
+    Errored(String),
+    Shutdown,
+}
+
+#[derive(Debug, Clone)]
+pub struct TurnContext {
+    pub turn_id: String,
+    pub session_id: String,
+    pub model: String,
+    pub working_dir: String,
+    pub permissions_profile: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct ToolCtx {
     pub call_id: String,
     pub tool_name: String,
-    pub session_id: String,
-    pub turn_id: String,
+    pub turn_context: TurnContext,
 }
 
 #[derive(Debug)]
@@ -75,8 +92,8 @@ impl ToolRuntime<String, String> for ShellCommandRuntime {
     ) -> Result<String, ToolError> {
         let mode = if attempt.is_sandboxed { "Sandboxed" } else { "Unsandboxed" };
         Ok(format!(
-            "[{}] Executed shell command '{}' in {} mode (CallID: {})",
-            ctx.tool_name, req, mode, ctx.call_id
+            "[{}] Executed shell command '{}' in {} mode (CallID: {}, TurnID: {})",
+            ctx.tool_name, req, mode, ctx.call_id, ctx.turn_context.turn_id
         ))
     }
 }
@@ -107,7 +124,7 @@ impl ToolOrchestrator {
         // 2. Sandbox Selection
         let attempt = SandboxAttempt {
             is_sandboxed: runtime.sandbox_preference() == SandboxPreference::Sandboxed,
-            cwd: "/workspace".to_string(),
+            cwd: ctx.turn_context.working_dir.clone(),
         };
 
         // 3. Execution
@@ -115,11 +132,65 @@ impl ToolOrchestrator {
     }
 }
 
+struct AgentSession {
+    session_id: String,
+    status: AgentStatus,
+    orchestrator: ToolOrchestrator,
+    turn_counter: u32,
+}
+
+impl AgentSession {
+    fn new(session_id: String) -> Self {
+        Self {
+            session_id,
+            status: AgentStatus::PendingInit,
+            orchestrator: ToolOrchestrator::new(),
+            turn_counter: 0,
+        }
+    }
+
+    fn steer_input(&mut self, input: &str) {
+        self.status = AgentStatus::Running;
+        self.turn_counter += 1;
+        let turn_id = format!("turn_{}", self.turn_counter);
+
+        println!("[Agent] Received input: '{}'. Generating TurnContext ({})...", input, turn_id);
+
+        let turn_context = TurnContext {
+            turn_id: turn_id.clone(),
+            session_id: self.session_id.clone(),
+            model: "gpt-5.5".into(),
+            working_dir: "/workspace".into(),
+            permissions_profile: "default".into(),
+        };
+
+        // For simulation purposes, we map natural language to a shell tool call.
+        let tool_req = format!("echo '{}'", input);
+        let ctx = ToolCtx {
+            call_id: format!("call_{}", self.turn_counter),
+            tool_name: "shell".into(),
+            turn_context: turn_context.clone(),
+        };
+
+        let runtime = ShellCommandRuntime;
+        match self.orchestrator.execute_tool(runtime, &tool_req, &ctx) {
+            Ok(out) => {
+                println!("[Agent] Turn executed. Result: {}", out);
+                self.status = AgentStatus::Completed("Success".into());
+            }
+            Err(e) => {
+                println!("[Agent] Turn failed. Error: {:?}", e);
+                self.status = AgentStatus::Errored("Execution Failed".into());
+            }
+        }
+    }
+}
+
 fn main() {
     println!("Welcome to Warp CLI (Rust Edition) - Inspired by just-every-code");
     println!("Type '/help' for commands, or 'quit' to close.");
 
-    let orchestrator = ToolOrchestrator::new();
+    let mut agent = AgentSession::new("sess_123".into());
     let mut input = String::new();
 
     loop {
@@ -137,14 +208,15 @@ fn main() {
         }
 
         if trimmed.eq_ignore_ascii_case("quit") || trimmed.eq_ignore_ascii_case("/quit") {
+            agent.status = AgentStatus::Shutdown;
             break;
         }
 
-        handle_command(trimmed, &orchestrator);
+        handle_command(trimmed, &mut agent);
     }
 }
 
-fn handle_command(input: &str, orchestrator: &ToolOrchestrator) {
+fn handle_command(input: &str, agent: &mut AgentSession) {
     if input.starts_with('/') {
         let cmd_parts: Vec<&str> = input[1..].splitn(2, ' ').collect();
         let cmd = cmd_parts[0].to_lowercase();
@@ -154,27 +226,14 @@ fn handle_command(input: &str, orchestrator: &ToolOrchestrator) {
             "help" => {
                 println!("Available commands:");
                 println!("  /help        - Show this help message");
-                println!("  /shell <cmd> - Run a command through the ToolOrchestrator");
+                println!("  /prompt <msg>- Send a natural language prompt to the agent");
                 println!("  quit         - Quit the application");
             }
-            "shell" => {
+            "prompt" => {
                 if args.is_empty() {
-                    println!("[Error] /shell requires a command.");
+                    println!("[Error] /prompt requires a message.");
                 } else {
-                    let ctx = ToolCtx {
-                        call_id: "call_abc123".into(),
-                        tool_name: "shell".into(),
-                        session_id: "sess_1".into(),
-                        turn_id: "turn_1".into(),
-                    };
-
-                    let runtime = ShellCommandRuntime;
-                    let req = args.to_string();
-
-                    match orchestrator.execute_tool(runtime, &req, &ctx) {
-                        Ok(out) => println!("[Result] {}", out),
-                        Err(e) => println!("[Error] {:?}", e),
-                    }
+                    agent.steer_input(args);
                 }
             }
             _ => {
@@ -182,6 +241,7 @@ fn handle_command(input: &str, orchestrator: &ToolOrchestrator) {
             }
         }
     } else {
-        println!("[Agent] Echoing input: {}", input);
+        // Default treat as prompt
+        agent.steer_input(input);
     }
 }

@@ -15,12 +15,32 @@ const (
 	Sandboxed   SandboxPreference = "Sandboxed"
 )
 
+// AgentStatus represents the state of an agent.
+type AgentStatus string
+
+const (
+	PendingInit AgentStatus = "PendingInit"
+	Running     AgentStatus = "Running"
+	Completed   AgentStatus = "Completed"
+	Interrupted AgentStatus = "Interrupted"
+	Errored     AgentStatus = "Errored"
+	Shutdown    AgentStatus = "Shutdown"
+)
+
+// TurnContext captures the state for a single turn of execution.
+type TurnContext struct {
+	TurnID             string
+	SessionID          string
+	Model              string
+	WorkingDir         string
+	PermissionsProfile string
+}
+
 // ToolCtx holds the execution context.
 type ToolCtx struct {
-	CallID    string
-	ToolName  string
-	SessionID string
-	TurnID    string
+	CallID      string
+	ToolName    string
+	TurnContext *TurnContext
 }
 
 // SandboxAttempt represents the environment configuration.
@@ -63,7 +83,8 @@ func (s *ShellCommandRuntime) Run(req interface{}, attempt *SandboxAttempt, ctx 
 		mode = "Sandboxed"
 	}
 
-	result := fmt.Sprintf("[%s] Executed shell command '%s' in %s mode (CallID: %s)", ctx.ToolName, cmdReq, mode, ctx.CallID)
+	result := fmt.Sprintf("[%s] Executed shell command '%s' in %s mode (CallID: %s, TurnID: %s)",
+		ctx.ToolName, cmdReq, mode, ctx.CallID, ctx.TurnContext.TurnID)
 	return result, nil
 }
 
@@ -84,18 +105,70 @@ func (o *ToolOrchestrator) ExecuteTool(runtime ToolRuntime, req interface{}, ctx
 	// 2. Sandbox Selection
 	attempt := &SandboxAttempt{
 		IsSandboxed: runtime.SandboxPreference() == Sandboxed,
-		Cwd:         "/workspace",
+		Cwd:         ctx.TurnContext.WorkingDir,
 	}
 
 	// 3. Execution
 	return runtime.Run(req, attempt, ctx)
 }
 
+// AgentSession encapsulates the state machine for processing input.
+type AgentSession struct {
+	SessionID    string
+	Status       AgentStatus
+	Orchestrator *ToolOrchestrator
+	TurnCounter  int
+}
+
+func NewAgentSession(sessionID string) *AgentSession {
+	return &AgentSession{
+		SessionID:    sessionID,
+		Status:       PendingInit,
+		Orchestrator: NewToolOrchestrator(),
+		TurnCounter:  0,
+	}
+}
+
+func (a *AgentSession) SteerInput(input string) {
+	a.Status = Running
+	a.TurnCounter++
+	turnID := fmt.Sprintf("turn_%d", a.TurnCounter)
+
+	fmt.Printf("[Agent] Received input: '%s'. Generating TurnContext (%s)...\n", input, turnID)
+
+	turnContext := &TurnContext{
+		TurnID:             turnID,
+		SessionID:          a.SessionID,
+		Model:              "gpt-5.5",
+		WorkingDir:         "/workspace",
+		PermissionsProfile: "default",
+	}
+
+	// Map natural language to a shell tool call for simulation
+	toolReq := fmt.Sprintf("echo '%s'", input)
+	ctx := &ToolCtx{
+		CallID:      fmt.Sprintf("call_%d", a.TurnCounter),
+		ToolName:    "shell",
+		TurnContext: turnContext,
+	}
+
+	runtime := &ShellCommandRuntime{}
+
+	result, err := a.Orchestrator.ExecuteTool(runtime, toolReq, ctx)
+	if err != nil {
+		fmt.Printf("[Agent] Turn failed. Error: %v\n", err)
+		a.Status = Errored
+	} else {
+		fmt.Printf("[Agent] Turn executed. Result: %v\n", result)
+		a.Status = Completed
+	}
+}
+
 func main() {
 	fmt.Println("Welcome to Warp CLI (Go Edition) - Inspired by just-every-code")
 	fmt.Println("Type '/help' for commands, or 'quit' to close.")
 
-	orchestrator := NewToolOrchestrator()
+	agent := NewAgentSession("sess_123")
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -110,14 +183,15 @@ func main() {
 		}
 
 		if strings.EqualFold(input, "quit") || strings.EqualFold(input, "/quit") {
+			agent.Status = Shutdown
 			break
 		}
 
-		handleCommand(input, orchestrator)
+		handleCommand(input, agent)
 	}
 }
 
-func handleCommand(input string, orchestrator *ToolOrchestrator) {
+func handleCommand(input string, agent *AgentSession) {
 	if strings.HasPrefix(input, "/") {
 		parts := strings.SplitN(input[1:], " ", 2)
 		cmd := strings.ToLower(parts[0])
@@ -130,31 +204,18 @@ func handleCommand(input string, orchestrator *ToolOrchestrator) {
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("  /help        - Show this help message")
-			fmt.Println("  /shell <cmd> - Run a command through the ToolOrchestrator")
+			fmt.Println("  /prompt <msg>- Send a natural language prompt to the agent")
 			fmt.Println("  quit         - Quit the application")
-		case "shell":
+		case "prompt":
 			if args == "" {
-				fmt.Println("[Error] /shell requires a command.")
+				fmt.Println("[Error] /prompt requires a message.")
 			} else {
-				ctx := &ToolCtx{
-					CallID:    "call_abc123",
-					ToolName:  "shell",
-					SessionID: "sess_1",
-					TurnID:    "turn_1",
-				}
-				runtime := &ShellCommandRuntime{}
-
-				result, err := orchestrator.ExecuteTool(runtime, args, ctx)
-				if err != nil {
-					fmt.Printf("[Error] %v\n", err)
-				} else {
-					fmt.Printf("[Result] %v\n", result)
-				}
+				agent.SteerInput(args)
 			}
 		default:
 			fmt.Printf("Unknown command: /%s\n", cmd)
 		}
 	} else {
-		fmt.Printf("[Agent] Echoing input: %s\n", input)
+		agent.SteerInput(input)
 	}
 }
