@@ -2,32 +2,82 @@ package dev.warp;
 
 import java.util.Scanner;
 
+enum SandboxPreference {
+    Unsandboxed,
+    Sandboxed
+}
+
+class ToolCtx {
+    public String callId;
+    public String toolName;
+    public String sessionId;
+    public String turnId;
+
+    public ToolCtx(String callId, String toolName, String sessionId, String turnId) {
+        this.callId = callId;
+        this.toolName = toolName;
+        this.sessionId = sessionId;
+        this.turnId = turnId;
+    }
+}
+
+class SandboxAttempt {
+    public boolean isSandboxed;
+    public String cwd;
+
+    public SandboxAttempt(boolean isSandboxed, String cwd) {
+        this.isSandboxed = isSandboxed;
+        this.cwd = cwd;
+    }
+}
+
+interface ToolRuntime<Req, Out> {
+    SandboxPreference getSandboxPreference();
+    boolean isEscalateOnFailure();
+    boolean requiresApproval(Req req);
+    Out run(Req req, SandboxAttempt attempt, ToolCtx ctx) throws Exception;
+}
+
+class ShellCommandRuntime implements ToolRuntime<String, String> {
+    @Override
+    public SandboxPreference getSandboxPreference() {
+        return SandboxPreference.Sandboxed;
+    }
+
+    @Override
+    public boolean isEscalateOnFailure() {
+        return true;
+    }
+
+    @Override
+    public boolean requiresApproval(String req) {
+        return true;
+    }
+
+    @Override
+    public String run(String req, SandboxAttempt attempt, ToolCtx ctx) {
+        String mode = attempt.isSandboxed ? "Sandboxed" : "Unsandboxed";
+        return String.format("[%s] Executed shell command '%s' in %s mode (CallID: %s)",
+                ctx.toolName, req, mode, ctx.callId);
+    }
+}
+
 class ToolOrchestrator {
-    private boolean sandboxEnabled = true;
-
-    public String executeTask(String task) {
-        System.out.println("[Orchestrator] Requesting approval for task: '" + task + "'");
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    public <Req, Out> Out executeTool(ToolRuntime<Req, Out> runtime, Req req, ToolCtx ctx) throws Exception {
+        // 1. Approval Phase
+        if (runtime.requiresApproval(req)) {
+            System.out.printf("[Orchestrator] Requesting tool approval for '%s'...%n", ctx.toolName);
+            // Assuming approved
         }
 
-        if (sandboxEnabled) {
-            System.out.println("[Orchestrator] Running in sandbox mode...");
-        }
+        // 2. Sandbox Selection
+        SandboxAttempt attempt = new SandboxAttempt(
+                runtime.getSandboxPreference() == SandboxPreference.Sandboxed,
+                "/workspace"
+        );
 
-        String[] steps = {"Plan", "Code", "Review"};
-        for (String step : steps) {
-            System.out.println("[Agent: " + step + "] Processing...");
-            try {
-                Thread.sleep(400);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        return "Task '" + task + "' completed successfully by Auto Drive.";
+        // 3. Execution
+        return runtime.run(req, attempt, ctx);
     }
 }
 
@@ -69,16 +119,22 @@ public class Main {
                 case "help":
                     System.out.println("Available commands:");
                     System.out.println("  /help        - Show this help message");
-                    System.out.println("  /auto <task> - Start Auto Drive orchestration for a task");
+                    System.out.println("  /shell <cmd> - Run a command through the ToolOrchestrator");
                     System.out.println("  quit         - Quit the application");
                     break;
-                case "auto":
+                case "shell":
                     if (args.isEmpty()) {
-                        System.out.println("[Error] /auto requires a task description.");
+                        System.out.println("[Error] /shell requires a command.");
                     } else {
-                        System.out.println("[Orchestrator: Auto Drive] Starting autonomous loop.");
-                        String result = orchestrator.executeTask(args);
-                        System.out.println("[Result] " + result);
+                        ToolCtx ctx = new ToolCtx("call_abc123", "shell", "sess_1", "turn_1");
+                        ShellCommandRuntime runtime = new ShellCommandRuntime();
+
+                        try {
+                            String result = orchestrator.executeTool(runtime, args, ctx);
+                            System.out.println("[Result] " + result);
+                        } catch (Exception e) {
+                            System.out.println("[Error] " + e.getMessage());
+                        }
                     }
                     break;
                 default:

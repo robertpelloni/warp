@@ -5,32 +5,90 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 )
 
-type ToolOrchestrator struct {
-	SandboxEnabled bool
+// SandboxPreference represents the isolation requirement for a tool.
+type SandboxPreference string
+
+const (
+	Unsandboxed SandboxPreference = "Unsandboxed"
+	Sandboxed   SandboxPreference = "Sandboxed"
+)
+
+// ToolCtx holds the execution context.
+type ToolCtx struct {
+	CallID    string
+	ToolName  string
+	SessionID string
+	TurnID    string
 }
+
+// SandboxAttempt represents the environment configuration.
+type SandboxAttempt struct {
+	IsSandboxed bool
+	Cwd         string
+}
+
+// ToolRuntime defines the interface tools must implement.
+type ToolRuntime interface {
+	SandboxPreference() SandboxPreference
+	EscalateOnFailure() bool
+	RequiresApproval(req interface{}) bool
+	Run(req interface{}, attempt *SandboxAttempt, ctx *ToolCtx) (interface{}, error)
+}
+
+// ShellCommandRuntime implements ToolRuntime for shell commands.
+type ShellCommandRuntime struct{}
+
+func (s *ShellCommandRuntime) SandboxPreference() SandboxPreference {
+	return Sandboxed
+}
+
+func (s *ShellCommandRuntime) EscalateOnFailure() bool {
+	return true
+}
+
+func (s *ShellCommandRuntime) RequiresApproval(req interface{}) bool {
+	return true
+}
+
+func (s *ShellCommandRuntime) Run(req interface{}, attempt *SandboxAttempt, ctx *ToolCtx) (interface{}, error) {
+	cmdReq, ok := req.(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid request type")
+	}
+
+	mode := "Unsandboxed"
+	if attempt.IsSandboxed {
+		mode = "Sandboxed"
+	}
+
+	result := fmt.Sprintf("[%s] Executed shell command '%s' in %s mode (CallID: %s)", ctx.ToolName, cmdReq, mode, ctx.CallID)
+	return result, nil
+}
+
+// ToolOrchestrator coordinates approval, sandboxing, and execution.
+type ToolOrchestrator struct{}
 
 func NewToolOrchestrator() *ToolOrchestrator {
-	return &ToolOrchestrator{SandboxEnabled: true}
+	return &ToolOrchestrator{}
 }
 
-func (o *ToolOrchestrator) ExecuteTask(task string) string {
-	fmt.Printf("[Orchestrator] Requesting approval for task: '%s'\n", task)
-	time.Sleep(500 * time.Millisecond)
-
-	if o.SandboxEnabled {
-		fmt.Println("[Orchestrator] Running in sandbox mode...")
+func (o *ToolOrchestrator) ExecuteTool(runtime ToolRuntime, req interface{}, ctx *ToolCtx) (interface{}, error) {
+	// 1. Approval Phase
+	if runtime.RequiresApproval(req) {
+		fmt.Printf("[Orchestrator] Requesting tool approval for '%s'...\n", ctx.ToolName)
+		// Assuming approved
 	}
 
-	steps := []string{"Plan", "Code", "Review"}
-	for _, step := range steps {
-		fmt.Printf("[Agent: %s] Processing...\n", step)
-		time.Sleep(400 * time.Millisecond)
+	// 2. Sandbox Selection
+	attempt := &SandboxAttempt{
+		IsSandboxed: runtime.SandboxPreference() == Sandboxed,
+		Cwd:         "/workspace",
 	}
 
-	return fmt.Sprintf("Task '%s' completed successfully by Auto Drive.", task)
+	// 3. Execution
+	return runtime.Run(req, attempt, ctx)
 }
 
 func main() {
@@ -72,15 +130,26 @@ func handleCommand(input string, orchestrator *ToolOrchestrator) {
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("  /help        - Show this help message")
-			fmt.Println("  /auto <task> - Start Auto Drive orchestration for a task")
+			fmt.Println("  /shell <cmd> - Run a command through the ToolOrchestrator")
 			fmt.Println("  quit         - Quit the application")
-		case "auto":
+		case "shell":
 			if args == "" {
-				fmt.Println("[Error] /auto requires a task description.")
+				fmt.Println("[Error] /shell requires a command.")
 			} else {
-				fmt.Println("[Orchestrator: Auto Drive] Starting autonomous loop.")
-				result := orchestrator.ExecuteTask(args)
-				fmt.Printf("[Result] %s\n", result)
+				ctx := &ToolCtx{
+					CallID:    "call_abc123",
+					ToolName:  "shell",
+					SessionID: "sess_1",
+					TurnID:    "turn_1",
+				}
+				runtime := &ShellCommandRuntime{}
+
+				result, err := orchestrator.ExecuteTool(runtime, args, ctx)
+				if err != nil {
+					fmt.Printf("[Error] %v\n", err)
+				} else {
+					fmt.Printf("[Result] %v\n", result)
+				}
 			}
 		default:
 			fmt.Printf("Unknown command: /%s\n", cmd)

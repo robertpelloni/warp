@@ -1,30 +1,70 @@
 using System;
-using System.Threading;
 
 namespace WarpCsharp
 {
-    class ToolOrchestrator
+    public enum SandboxPreference
     {
-        public bool SandboxEnabled { get; set; } = true;
+        Unsandboxed,
+        Sandboxed
+    }
 
-        public string ExecuteTask(string task)
+    public class ToolCtx
+    {
+        public string CallId { get; set; } = string.Empty;
+        public string ToolName { get; set; } = string.Empty;
+        public string SessionId { get; set; } = string.Empty;
+        public string TurnId { get; set; } = string.Empty;
+    }
+
+    public class SandboxAttempt
+    {
+        public bool IsSandboxed { get; set; }
+        public string Cwd { get; set; } = string.Empty;
+    }
+
+    public interface IToolRuntime<TReq, TOut>
+    {
+        SandboxPreference SandboxPreference { get; }
+        bool EscalateOnFailure { get; }
+        bool RequiresApproval(TReq req);
+        TOut Run(TReq req, SandboxAttempt attempt, ToolCtx ctx);
+    }
+
+    public class ShellCommandRuntime : IToolRuntime<string, string>
+    {
+        public SandboxPreference SandboxPreference => SandboxPreference.Sandboxed;
+
+        public bool EscalateOnFailure => true;
+
+        public bool RequiresApproval(string req) => true;
+
+        public string Run(string req, SandboxAttempt attempt, ToolCtx ctx)
         {
-            Console.WriteLine($"[Orchestrator] Requesting approval for task: '{task}'");
-            Thread.Sleep(500);
+            string mode = attempt.IsSandboxed ? "Sandboxed" : "Unsandboxed";
+            return $"[{ctx.ToolName}] Executed shell command '{req}' in {mode} mode (CallID: {ctx.CallId})";
+        }
+    }
 
-            if (SandboxEnabled)
+    public class ToolOrchestrator
+    {
+        public TOut ExecuteTool<TReq, TOut>(IToolRuntime<TReq, TOut> runtime, TReq req, ToolCtx ctx)
+        {
+            // 1. Approval Phase
+            if (runtime.RequiresApproval(req))
             {
-                Console.WriteLine("[Orchestrator] Running in sandbox mode...");
+                Console.WriteLine($"[Orchestrator] Requesting tool approval for '{ctx.ToolName}'...");
+                // Assuming approved
             }
 
-            string[] steps = { "Plan", "Code", "Review" };
-            foreach (var step in steps)
+            // 2. Sandbox Selection
+            var attempt = new SandboxAttempt
             {
-                Console.WriteLine($"[Agent: {step}] Processing...");
-                Thread.Sleep(400);
-            }
+                IsSandboxed = runtime.SandboxPreference == SandboxPreference.Sandboxed,
+                Cwd = "/workspace"
+            };
 
-            return $"Task '{task}' completed successfully by Auto Drive.";
+            // 3. Execution
+            return runtime.Run(req, attempt, ctx);
         }
     }
 
@@ -81,19 +121,34 @@ namespace WarpCsharp
                     case "help":
                         Console.WriteLine("Available commands:");
                         Console.WriteLine("  /help        - Show this help message");
-                        Console.WriteLine("  /auto <task> - Start Auto Drive orchestration for a task");
+                        Console.WriteLine("  /shell <cmd> - Run a command through the ToolOrchestrator");
                         Console.WriteLine("  quit         - Quit the application");
                         break;
-                    case "auto":
+                    case "shell":
                         if (string.IsNullOrEmpty(args))
                         {
-                            Console.WriteLine("[Error] /auto requires a task description.");
+                            Console.WriteLine("[Error] /shell requires a command.");
                         }
                         else
                         {
-                            Console.WriteLine("[Orchestrator: Auto Drive] Starting autonomous loop.");
-                            string result = orchestrator.ExecuteTask(args);
-                            Console.WriteLine($"[Result] {result}");
+                            var ctx = new ToolCtx
+                            {
+                                CallId = "call_abc123",
+                                ToolName = "shell",
+                                SessionId = "sess_1",
+                                TurnId = "turn_1"
+                            };
+                            var runtime = new ShellCommandRuntime();
+
+                            try
+                            {
+                                string result = orchestrator.ExecuteTool(runtime, args, ctx);
+                                Console.WriteLine($"[Result] {result}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[Error] {ex.Message}");
+                            }
                         }
                         break;
                     default:

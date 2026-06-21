@@ -3,13 +3,11 @@
 # Ultimate Agentic Coding Harness Rebuild - Handoff
 
 ## Current Status
-We are processing the `just-every-code` submodule. I have added it and begun porting the foundational CLI REPL structure across Rust, Go, C#, and Java, specifically setting up the `ToolOrchestrator` structures to handle tasks.
+We are actively porting the `just-every-code` repository architecture identically across Rust, Go, C#, and Java.
+In the previous session, we successfully ported the core `ToolCtx`, `ToolRuntime`, `SandboxAttempt`, and `ToolOrchestrator` execution structures into the four CLI targets. We have eliminated the mock `Thread.Sleep` auto-drive loops and implemented actual interfaces that mirror the rust trait pipeline from `just-every-code/codex-rs/core/src/tools/sandboxing.rs`.
 
 ## Action Required for Successor
-The code reviewer correctly noted that we are still only providing "fake" stubbed functionality (using `Thread.Sleep`) instead of functionally porting the core logic (e.g., actual agent states, tool execution mapping, and API dispatch).
-
 **Your Immediate Goal:**
-1. You must implement *actual* functional logic ported from `just-every-code/codex-rs` into the four languages.
-2. Stop using simulated delays. You must port the actual definitions of `ToolCtx`, `ToolRuntime`, and the network/sandbox execution abstractions derived from `codex-rs/core/src/tools/orchestrator.rs` and `codex-rs/core/src/thread_manager.rs`.
-3. Implement the real parsing and state machine for the agents, rather than string matching against `"/auto"`.
-4. Ensure no build artifacts are committed.
+1. Proceed with porting the actual `Agent` / `CodexThread` state machine loops that consume these orchestrators. Look at how `codex-rs` handles turning natural language into tool calls (e.g., `TurnContext` generation and passing to the orchestrator).
+2. Or, if applicable based on the ROADMAP, proceed with porting the `mcp-server` logic identically into all four target languages.
+3. Ensure absolute strictness with `.gitignore` - no compiled artifacts may be staged or committed. Keep processing the `just-every-code` submodule deep dive.
