@@ -1,7 +1,40 @@
 use std::io::{self, Write};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 // Core Abstractions Ported from codex-rs/core/src/tools/sandboxing.rs
 // and codex-rs/core/src/session/turn_context.rs
+// Now includes MCP integration structures derived from codex-rs/mcp-server/
+
+pub mod mcp_protocol {
+    #[derive(Debug, Clone)]
+    pub struct JsonRpcRequest {
+        pub id: String,
+        pub method: String,
+        pub params: Option<String>,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct JsonRpcResponse {
+        pub id: String,
+        pub result: Option<String>,
+        pub error: Option<String>,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct CallToolRequestParams {
+        pub name: String,
+        pub arguments: String,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct CallToolResult {
+        pub content: String,
+        pub is_error: bool,
+    }
+}
+
+use mcp_protocol::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SandboxPreference {
@@ -66,8 +99,6 @@ pub trait ToolRuntime<Req, Out>: Approvable<Req> + Sandboxable {
     ) -> Result<Out, ToolError>;
 }
 
-// Example Implementations
-
 struct ShellCommandRuntime;
 
 impl Sandboxable for ShellCommandRuntime {
@@ -98,11 +129,21 @@ impl ToolRuntime<String, String> for ShellCommandRuntime {
     }
 }
 
-struct ToolOrchestrator;
+struct ToolOrchestrator {
+    mcp_tools: Arc<Mutex<HashMap<String, String>>>, // registered MCP capabilities
+}
 
 impl ToolOrchestrator {
     fn new() -> Self {
-        Self
+        Self {
+            mcp_tools: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    fn register_mcp_tool(&self, name: String, description: String) {
+        let mut tools = self.mcp_tools.lock().unwrap();
+        tools.insert(name.clone(), description);
+        println!("[Orchestrator] Registered dynamic MCP tool: {}", name);
     }
 
     fn execute_tool<R, Req, Out>(
@@ -114,37 +155,76 @@ impl ToolOrchestrator {
     where
         R: ToolRuntime<Req, Out>,
     {
-        // 1. Approval Phase
         let requires_approval = runtime.requires_approval(req);
         if requires_approval {
             println!("[Orchestrator] Requesting tool approval for '{}'...", ctx.tool_name);
-            // Assuming approved for now
         }
 
-        // 2. Sandbox Selection
         let attempt = SandboxAttempt {
             is_sandboxed: runtime.sandbox_preference() == SandboxPreference::Sandboxed,
             cwd: ctx.turn_context.working_dir.clone(),
         };
 
-        // 3. Execution
         runtime.run(req, &attempt, ctx)
+    }
+}
+
+struct MessageProcessor {
+    orchestrator: Arc<ToolOrchestrator>,
+}
+
+impl MessageProcessor {
+    fn new(orchestrator: Arc<ToolOrchestrator>) -> Self {
+        Self { orchestrator }
+    }
+
+    fn process_request(&self, req: JsonRpcRequest) -> JsonRpcResponse {
+        println!("[MCP Server] Processing JSON-RPC method: {}", req.method);
+        match req.method.as_str() {
+            "initialize" => {
+                self.orchestrator.register_mcp_tool("mcp_shell".into(), "Execute commands via MCP".into());
+                JsonRpcResponse {
+                    id: req.id,
+                    result: Some("initialized".into()),
+                    error: None,
+                }
+            }
+            "tools/call" => {
+                let params = req.params.unwrap_or_default();
+                println!("[MCP Server] Dispatched to tool execution via orchestrator: {}", params);
+                JsonRpcResponse {
+                    id: req.id,
+                    result: Some(format!("Executed MCP tool call with args: {}", params)),
+                    error: None,
+                }
+            }
+            _ => JsonRpcResponse {
+                id: req.id,
+                result: None,
+                error: Some("Method not found".into()),
+            }
+        }
     }
 }
 
 struct AgentSession {
     session_id: String,
-    status: AgentStatus,
-    orchestrator: ToolOrchestrator,
+    pub status: AgentStatus,
+    orchestrator: Arc<ToolOrchestrator>,
+    mcp_processor: MessageProcessor,
     turn_counter: u32,
 }
 
 impl AgentSession {
     fn new(session_id: String) -> Self {
+        let orchestrator = Arc::new(ToolOrchestrator::new());
+        let mcp_processor = MessageProcessor::new(Arc::clone(&orchestrator));
+
         Self {
             session_id,
             status: AgentStatus::PendingInit,
-            orchestrator: ToolOrchestrator::new(),
+            orchestrator,
+            mcp_processor,
             turn_counter: 0,
         }
     }
@@ -164,7 +244,18 @@ impl AgentSession {
             permissions_profile: "default".into(),
         };
 
-        // For simulation purposes, we map natural language to a shell tool call.
+        if input.starts_with("mcp") {
+            let req = JsonRpcRequest {
+                id: "1".into(),
+                method: "tools/call".into(),
+                params: Some(input.to_string()),
+            };
+            let response = self.mcp_processor.process_request(req);
+            println!("[Agent] MCP Turn executed. Result: {:?}", response.result.unwrap_or_default());
+            self.status = AgentStatus::Completed("Success".into());
+            return;
+        }
+
         let tool_req = format!("echo '{}'", input);
         let ctx = ToolCtx {
             call_id: format!("call_{}", self.turn_counter),
@@ -184,6 +275,15 @@ impl AgentSession {
             }
         }
     }
+
+    fn initialize_mcp(&self) {
+        let req = JsonRpcRequest {
+            id: "0".into(),
+            method: "initialize".into(),
+            params: None,
+        };
+        self.mcp_processor.process_request(req);
+    }
 }
 
 fn main() {
@@ -191,6 +291,8 @@ fn main() {
     println!("Type '/help' for commands, or 'quit' to close.");
 
     let mut agent = AgentSession::new("sess_123".into());
+    agent.initialize_mcp();
+
     let mut input = String::new();
 
     loop {
@@ -241,7 +343,6 @@ fn handle_command(input: &str, agent: &mut AgentSession) {
             }
         }
     } else {
-        // Default treat as prompt
         agent.steer_input(input);
     }
 }

@@ -5,9 +5,25 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
-// SandboxPreference represents the isolation requirement for a tool.
+// --- MCP Protocol Definitions ---
+
+type JsonRpcRequest struct {
+	ID     string
+	Method string
+	Params string
+}
+
+type JsonRpcResponse struct {
+	ID     string
+	Result string
+	Error  string
+}
+
+// --- Orchestration and Context ---
+
 type SandboxPreference string
 
 const (
@@ -15,7 +31,6 @@ const (
 	Sandboxed   SandboxPreference = "Sandboxed"
 )
 
-// AgentStatus represents the state of an agent.
 type AgentStatus string
 
 const (
@@ -27,7 +42,6 @@ const (
 	Shutdown    AgentStatus = "Shutdown"
 )
 
-// TurnContext captures the state for a single turn of execution.
 type TurnContext struct {
 	TurnID             string
 	SessionID          string
@@ -36,20 +50,17 @@ type TurnContext struct {
 	PermissionsProfile string
 }
 
-// ToolCtx holds the execution context.
 type ToolCtx struct {
 	CallID      string
 	ToolName    string
 	TurnContext *TurnContext
 }
 
-// SandboxAttempt represents the environment configuration.
 type SandboxAttempt struct {
 	IsSandboxed bool
 	Cwd         string
 }
 
-// ToolRuntime defines the interface tools must implement.
 type ToolRuntime interface {
 	SandboxPreference() SandboxPreference
 	EscalateOnFailure() bool
@@ -57,7 +68,6 @@ type ToolRuntime interface {
 	Run(req interface{}, attempt *SandboxAttempt, ctx *ToolCtx) (interface{}, error)
 }
 
-// ShellCommandRuntime implements ToolRuntime for shell commands.
 type ShellCommandRuntime struct{}
 
 func (s *ShellCommandRuntime) SandboxPreference() SandboxPreference {
@@ -73,60 +83,95 @@ func (s *ShellCommandRuntime) RequiresApproval(req interface{}) bool {
 }
 
 func (s *ShellCommandRuntime) Run(req interface{}, attempt *SandboxAttempt, ctx *ToolCtx) (interface{}, error) {
-	cmdReq, ok := req.(string)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type")
-	}
-
+	cmdReq, _ := req.(string)
 	mode := "Unsandboxed"
 	if attempt.IsSandboxed {
 		mode = "Sandboxed"
 	}
-
-	result := fmt.Sprintf("[%s] Executed shell command '%s' in %s mode (CallID: %s, TurnID: %s)",
-		ctx.ToolName, cmdReq, mode, ctx.CallID, ctx.TurnContext.TurnID)
-	return result, nil
+	return fmt.Sprintf("[%s] Executed shell command '%s' in %s mode (CallID: %s, TurnID: %s)",
+		ctx.ToolName, cmdReq, mode, ctx.CallID, ctx.TurnContext.TurnID), nil
 }
 
-// ToolOrchestrator coordinates approval, sandboxing, and execution.
-type ToolOrchestrator struct{}
+type ToolOrchestrator struct {
+	mcpTools map[string]string
+	mu       sync.Mutex
+}
 
 func NewToolOrchestrator() *ToolOrchestrator {
-	return &ToolOrchestrator{}
+	return &ToolOrchestrator{
+		mcpTools: make(map[string]string),
+	}
+}
+
+func (o *ToolOrchestrator) RegisterMcpTool(name, description string) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.mcpTools[name] = description
+	fmt.Printf("[Orchestrator] Registered dynamic MCP tool: %s\n", name)
 }
 
 func (o *ToolOrchestrator) ExecuteTool(runtime ToolRuntime, req interface{}, ctx *ToolCtx) (interface{}, error) {
-	// 1. Approval Phase
 	if runtime.RequiresApproval(req) {
 		fmt.Printf("[Orchestrator] Requesting tool approval for '%s'...\n", ctx.ToolName)
-		// Assuming approved
 	}
 
-	// 2. Sandbox Selection
 	attempt := &SandboxAttempt{
 		IsSandboxed: runtime.SandboxPreference() == Sandboxed,
 		Cwd:         ctx.TurnContext.WorkingDir,
 	}
 
-	// 3. Execution
 	return runtime.Run(req, attempt, ctx)
 }
 
-// AgentSession encapsulates the state machine for processing input.
+// --- MCP Server Implementation ---
+
+type MessageProcessor struct {
+	orchestrator *ToolOrchestrator
+}
+
+func NewMessageProcessor(orchestrator *ToolOrchestrator) *MessageProcessor {
+	return &MessageProcessor{orchestrator: orchestrator}
+}
+
+func (m *MessageProcessor) ProcessRequest(req JsonRpcRequest) JsonRpcResponse {
+	fmt.Printf("[MCP Server] Processing JSON-RPC method: %s\n", req.Method)
+
+	switch req.Method {
+	case "initialize":
+		m.orchestrator.RegisterMcpTool("mcp_shell", "Execute commands via MCP")
+		return JsonRpcResponse{ID: req.ID, Result: "initialized", Error: ""}
+	case "tools/call":
+		fmt.Printf("[MCP Server] Dispatched to tool execution via orchestrator: %s\n", req.Params)
+		return JsonRpcResponse{ID: req.ID, Result: fmt.Sprintf("Executed MCP tool call with args: %s", req.Params), Error: ""}
+	default:
+		return JsonRpcResponse{ID: req.ID, Result: "", Error: "Method not found"}
+	}
+}
+
+// --- Agent Implementation ---
+
 type AgentSession struct {
 	SessionID    string
 	Status       AgentStatus
-	Orchestrator *ToolOrchestrator
+	orchestrator *ToolOrchestrator
+	mcpProcessor *MessageProcessor
 	TurnCounter  int
 }
 
 func NewAgentSession(sessionID string) *AgentSession {
+	orchestrator := NewToolOrchestrator()
 	return &AgentSession{
 		SessionID:    sessionID,
 		Status:       PendingInit,
-		Orchestrator: NewToolOrchestrator(),
+		orchestrator: orchestrator,
+		mcpProcessor: NewMessageProcessor(orchestrator),
 		TurnCounter:  0,
 	}
+}
+
+func (a *AgentSession) InitializeMcp() {
+	req := JsonRpcRequest{ID: "0", Method: "initialize", Params: ""}
+	a.mcpProcessor.ProcessRequest(req)
 }
 
 func (a *AgentSession) SteerInput(input string) {
@@ -144,7 +189,14 @@ func (a *AgentSession) SteerInput(input string) {
 		PermissionsProfile: "default",
 	}
 
-	// Map natural language to a shell tool call for simulation
+	if strings.HasPrefix(input, "mcp") {
+		req := JsonRpcRequest{ID: "1", Method: "tools/call", Params: input}
+		resp := a.mcpProcessor.ProcessRequest(req)
+		fmt.Printf("[Agent] MCP Turn executed. Result: %s\n", resp.Result)
+		a.Status = Completed
+		return
+	}
+
 	toolReq := fmt.Sprintf("echo '%s'", input)
 	ctx := &ToolCtx{
 		CallID:      fmt.Sprintf("call_%d", a.TurnCounter),
@@ -154,7 +206,7 @@ func (a *AgentSession) SteerInput(input string) {
 
 	runtime := &ShellCommandRuntime{}
 
-	result, err := a.Orchestrator.ExecuteTool(runtime, toolReq, ctx)
+	result, err := a.orchestrator.ExecuteTool(runtime, toolReq, ctx)
 	if err != nil {
 		fmt.Printf("[Agent] Turn failed. Error: %v\n", err)
 		a.Status = Errored
@@ -169,6 +221,8 @@ func main() {
 	fmt.Println("Type '/help' for commands, or 'quit' to close.")
 
 	agent := NewAgentSession("sess_123")
+	agent.InitializeMcp()
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {

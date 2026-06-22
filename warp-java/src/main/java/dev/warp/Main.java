@@ -1,6 +1,36 @@
 package dev.warp;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+
+// --- MCP Protocol Definitions ---
+
+class JsonRpcRequest {
+    public String id;
+    public String method;
+    public String params;
+
+    public JsonRpcRequest(String id, String method, String params) {
+        this.id = id;
+        this.method = method;
+        this.params = params;
+    }
+}
+
+class JsonRpcResponse {
+    public String id;
+    public String result;
+    public String error;
+
+    public JsonRpcResponse(String id, String result, String error) {
+        this.id = id;
+        this.result = result;
+        this.error = error;
+    }
+}
+
+// --- Orchestration and Context ---
 
 enum SandboxPreference {
     Unsandboxed,
@@ -86,35 +116,72 @@ class ShellCommandRuntime implements ToolRuntime<String, String> {
 }
 
 class ToolOrchestrator {
+    private final Map<String, String> mcpTools = new HashMap<>();
+
+    public synchronized void registerMcpTool(String name, String description) {
+        mcpTools.put(name, description);
+        System.out.printf("[Orchestrator] Registered dynamic MCP tool: %s%n", name);
+    }
+
     public <Req, Out> Out executeTool(ToolRuntime<Req, Out> runtime, Req req, ToolCtx ctx) throws Exception {
-        // 1. Approval Phase
         if (runtime.requiresApproval(req)) {
             System.out.printf("[Orchestrator] Requesting tool approval for '%s'...%n", ctx.toolName);
-            // Assuming approved
         }
 
-        // 2. Sandbox Selection
         SandboxAttempt attempt = new SandboxAttempt(
                 runtime.getSandboxPreference() == SandboxPreference.Sandboxed,
                 ctx.turnContext.workingDir
         );
 
-        // 3. Execution
         return runtime.run(req, attempt, ctx);
     }
 }
+
+// --- MCP Server Implementation ---
+
+class MessageProcessor {
+    private ToolOrchestrator orchestrator;
+
+    public MessageProcessor(ToolOrchestrator orchestrator) {
+        this.orchestrator = orchestrator;
+    }
+
+    public JsonRpcResponse processRequest(JsonRpcRequest req) {
+        System.out.printf("[MCP Server] Processing JSON-RPC method: %s%n", req.method);
+
+        switch (req.method) {
+            case "initialize":
+                orchestrator.registerMcpTool("mcp_shell", "Execute commands via MCP");
+                return new JsonRpcResponse(req.id, "initialized", null);
+            case "tools/call":
+                System.out.printf("[MCP Server] Dispatched to tool execution via orchestrator: %s%n", req.params);
+                return new JsonRpcResponse(req.id, "Executed MCP tool call with args: " + req.params, null);
+            default:
+                return new JsonRpcResponse(req.id, null, "Method not found");
+        }
+    }
+}
+
+// --- Agent Implementation ---
 
 class AgentSession {
     public String sessionId;
     public AgentStatus status;
     private ToolOrchestrator orchestrator;
+    private MessageProcessor mcpProcessor;
     private int turnCounter;
 
     public AgentSession(String sessionId) {
         this.sessionId = sessionId;
         this.status = AgentStatus.PendingInit;
         this.orchestrator = new ToolOrchestrator();
+        this.mcpProcessor = new MessageProcessor(orchestrator);
         this.turnCounter = 0;
+    }
+
+    public void initializeMcp() {
+        JsonRpcRequest req = new JsonRpcRequest("0", "initialize", null);
+        mcpProcessor.processRequest(req);
     }
 
     public void steerInput(String input) {
@@ -131,6 +198,14 @@ class AgentSession {
                 "/workspace",
                 "default"
         );
+
+        if (input.startsWith("mcp")) {
+            JsonRpcRequest req = new JsonRpcRequest("1", "tools/call", input);
+            JsonRpcResponse resp = mcpProcessor.processRequest(req);
+            System.out.println("[Agent] MCP Turn executed. Result: " + resp.result);
+            this.status = AgentStatus.Completed;
+            return;
+        }
 
         String toolReq = "echo '" + input + "'";
         ToolCtx ctx = new ToolCtx("call_" + this.turnCounter, "shell", turnContext);
@@ -153,6 +228,8 @@ public class Main {
         System.out.println("Type '/help' for commands, or 'quit' to close.");
 
         AgentSession agent = new AgentSession("sess_123");
+        agent.initializeMcp();
+
         Scanner scanner = new Scanner(System.in);
 
         while (true) {

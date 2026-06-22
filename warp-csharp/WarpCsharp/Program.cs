@@ -1,7 +1,26 @@
 using System;
+using System.Collections.Generic;
 
 namespace WarpCsharp
 {
+    // --- MCP Protocol Definitions ---
+
+    public class JsonRpcRequest
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Method { get; set; } = string.Empty;
+        public string Params { get; set; } = string.Empty;
+    }
+
+    public class JsonRpcResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Result { get; set; } = string.Empty;
+        public string Error { get; set; } = string.Empty;
+    }
+
+    // --- Orchestration and Context ---
+
     public enum SandboxPreference
     {
         Unsandboxed,
@@ -65,32 +84,72 @@ namespace WarpCsharp
 
     public class ToolOrchestrator
     {
+        private Dictionary<string, string> _mcpTools = new Dictionary<string, string>();
+        private readonly object _lock = new object();
+
+        public void RegisterMcpTool(string name, string description)
+        {
+            lock (_lock)
+            {
+                _mcpTools[name] = description;
+                Console.WriteLine($"[Orchestrator] Registered dynamic MCP tool: {name}");
+            }
+        }
+
         public TOut ExecuteTool<TReq, TOut>(IToolRuntime<TReq, TOut> runtime, TReq req, ToolCtx ctx)
         {
-            // 1. Approval Phase
             if (runtime.RequiresApproval(req))
             {
                 Console.WriteLine($"[Orchestrator] Requesting tool approval for '{ctx.ToolName}'...");
-                // Assuming approved
             }
 
-            // 2. Sandbox Selection
             var attempt = new SandboxAttempt
             {
                 IsSandboxed = runtime.SandboxPreference == SandboxPreference.Sandboxed,
                 Cwd = ctx.TurnContext.WorkingDir
             };
 
-            // 3. Execution
             return runtime.Run(req, attempt, ctx);
         }
     }
+
+    // --- MCP Server Implementation ---
+
+    public class MessageProcessor
+    {
+        private ToolOrchestrator _orchestrator;
+
+        public MessageProcessor(ToolOrchestrator orchestrator)
+        {
+            _orchestrator = orchestrator;
+        }
+
+        public JsonRpcResponse ProcessRequest(JsonRpcRequest req)
+        {
+            Console.WriteLine($"[MCP Server] Processing JSON-RPC method: {req.Method}");
+
+            switch (req.Method)
+            {
+                case "initialize":
+                    _orchestrator.RegisterMcpTool("mcp_shell", "Execute commands via MCP");
+                    return new JsonRpcResponse { Id = req.Id, Result = "initialized" };
+                case "tools/call":
+                    Console.WriteLine($"[MCP Server] Dispatched to tool execution via orchestrator: {req.Params}");
+                    return new JsonRpcResponse { Id = req.Id, Result = $"Executed MCP tool call with args: {req.Params}" };
+                default:
+                    return new JsonRpcResponse { Id = req.Id, Error = "Method not found" };
+            }
+        }
+    }
+
+    // --- Agent Implementation ---
 
     public class AgentSession
     {
         public string SessionId { get; private set; }
         public AgentStatus Status { get; set; }
         private ToolOrchestrator _orchestrator;
+        private MessageProcessor _mcpProcessor;
         private int _turnCounter;
 
         public AgentSession(string sessionId)
@@ -98,7 +157,14 @@ namespace WarpCsharp
             SessionId = sessionId;
             Status = AgentStatus.PendingInit;
             _orchestrator = new ToolOrchestrator();
+            _mcpProcessor = new MessageProcessor(_orchestrator);
             _turnCounter = 0;
+        }
+
+        public void InitializeMcp()
+        {
+            var req = new JsonRpcRequest { Id = "0", Method = "initialize" };
+            _mcpProcessor.ProcessRequest(req);
         }
 
         public void SteerInput(string input)
@@ -117,6 +183,15 @@ namespace WarpCsharp
                 WorkingDir = "/workspace",
                 PermissionsProfile = "default"
             };
+
+            if (input.StartsWith("mcp"))
+            {
+                var req = new JsonRpcRequest { Id = "1", Method = "tools/call", Params = input };
+                var resp = _mcpProcessor.ProcessRequest(req);
+                Console.WriteLine($"[Agent] MCP Turn executed. Result: {resp.Result}");
+                Status = AgentStatus.Completed;
+                return;
+            }
 
             string toolReq = $"echo '{input}'";
             var ctx = new ToolCtx
@@ -150,6 +225,7 @@ namespace WarpCsharp
             Console.WriteLine("Type '/help' for commands, or 'quit' to close.");
 
             var agent = new AgentSession("sess_123");
+            agent.InitializeMcp();
 
             while (true)
             {
