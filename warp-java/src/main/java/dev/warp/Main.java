@@ -223,6 +223,33 @@ class AgentSession {
 }
 
 public class Main {
+    public static void triggerBrowserDemo() {
+
+        BrowserConfig config = new BrowserConfig(
+
+                true,
+
+                new ViewportConfig(1280, 720, 1.0)
+
+        );
+
+        BrowserManager manager = new BrowserManager(config);
+
+        manager.launch();
+
+        if (manager.activePage != null) {
+
+            manager.activePage.navigate("https://github.com/just-every/code");
+
+            manager.activePage.dispatchMouseEvent(250.0, 300.0, "click");
+
+            manager.activePage.dispatchKeyEvent("Hello Warp!");
+
+            manager.activePage.captureScreenshot();
+
+        }
+
+    }
     public static void main(String[] args) {
         System.out.println("Welcome to Warp CLI (Java Edition) - Inspired by just-every-code");
         System.out.println("Type '/help' for commands, or 'quit' to close.");
@@ -260,6 +287,9 @@ public class Main {
             String args = parts.length > 1 ? parts[1].trim() : "";
 
             switch (cmd) {
+                case "browser":
+                    triggerBrowserDemo();
+                    break;
                 case "help":
                     System.out.println("Available commands:");
                     System.out.println("  /help        - Show this help message");
@@ -280,5 +310,85 @@ public class Main {
         } else {
             agent.steerInput(input);
         }
+    }
+}
+
+// --- Browser Integration Abstractions ---
+
+class ViewportConfig {
+    public int width;
+    public int height;
+    public double deviceScaleFactor;
+
+    public ViewportConfig(int width, int height, double deviceScaleFactor) {
+        this.width = width;
+        this.height = height;
+        this.deviceScaleFactor = deviceScaleFactor;
+    }
+}
+
+class BrowserConfig {
+    public boolean headless;
+    public ViewportConfig viewport;
+
+    public BrowserConfig(boolean headless, ViewportConfig viewport) {
+        this.headless = headless;
+        this.viewport = viewport;
+    }
+}
+
+class CursorState {
+    public double x;
+    public double y;
+
+    public CursorState(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class CdpPage {
+    public String url = "about:blank";
+    public CursorState cursorState = new CursorState(0.0, 0.0);
+
+    public void navigate(String newUrl) {
+        System.out.printf("[Browser:Page] Navigating to: %s%n", newUrl);
+        this.url = newUrl;
+        try {
+            Thread.sleep(600); // Simulate load time
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        System.out.printf("[Browser:Page] Successfully loaded %s%n", newUrl);
+    }
+
+    public synchronized void dispatchMouseEvent(double x, double y, String eventType) {
+        System.out.printf("[Browser:Page] Dispatching mouse %s at (%f, %f)%n", eventType, x, y);
+        this.cursorState.x = x;
+        this.cursorState.y = y;
+    }
+
+    public void dispatchKeyEvent(String text) {
+        System.out.printf("[Browser:Page] Dispatching keystroke: '%s'%n", text);
+    }
+
+    public String captureScreenshot() {
+        System.out.printf("[Browser:Page] Capturing screenshot for %s%n", this.url);
+        return "screenshot_data_base64_for_" + this.url;
+    }
+}
+
+class BrowserManager {
+    public BrowserConfig config;
+    public CdpPage activePage;
+
+    public BrowserManager(BrowserConfig config) {
+        this.config = config;
+    }
+
+    public synchronized void launch() {
+        String mode = config.headless ? "Headless" : "Windowed";
+        System.out.printf("[Browser:Manager] Launching %s Chrome via CDP...%n", mode);
+        this.activePage = new CdpPage();
     }
 }

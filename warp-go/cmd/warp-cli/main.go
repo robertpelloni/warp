@@ -255,6 +255,8 @@ func handleCommand(input string, agent *AgentSession) {
 		}
 
 		switch cmd {
+		case "browser":
+			triggerBrowserDemo()
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("  /help        - Show this help message")
@@ -271,5 +273,108 @@ func handleCommand(input string, agent *AgentSession) {
 		}
 	} else {
 		agent.SteerInput(input)
+	}
+}
+
+// --- Browser Integration Abstractions ---
+
+type ViewportConfig struct {
+	Width             uint32
+	Height            uint32
+	DeviceScaleFactor float64
+}
+
+type BrowserConfig struct {
+	Headless bool
+	Viewport ViewportConfig
+}
+
+type CursorState struct {
+	X float64
+	Y float64
+}
+
+type CdpPage struct {
+	URL         string
+	CursorState *CursorState
+	mu          sync.Mutex
+}
+
+func NewCdpPage() *CdpPage {
+	return &CdpPage{
+		URL:         "about:blank",
+		CursorState: &CursorState{X: 0.0, Y: 0.0},
+	}
+}
+
+func (p *CdpPage) Navigate(url string) error {
+	fmt.Printf("[Browser:Page] Navigating to: %s\n", url)
+	p.URL = url
+	// Simulate load time
+	fmt.Printf("[Browser:Page] Successfully loaded %s\n", url)
+	return nil
+}
+
+func (p *CdpPage) DispatchMouseEvent(x, y float64, eventType string) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	fmt.Printf("[Browser:Page] Dispatching mouse %s at (%f, %f)\n", eventType, x, y)
+	p.CursorState.X = x
+	p.CursorState.Y = y
+	return nil
+}
+
+func (p *CdpPage) DispatchKeyEvent(text string) error {
+	fmt.Printf("[Browser:Page] Dispatching keystroke: '%s'\n", text)
+	return nil
+}
+
+func (p *CdpPage) CaptureScreenshot() (string, error) {
+	fmt.Printf("[Browser:Page] Capturing screenshot for %s\n", p.URL)
+	return fmt.Sprintf("screenshot_data_base64_for_%s", p.URL), nil
+}
+
+type BrowserManager struct {
+	Config     BrowserConfig
+	ActivePage *CdpPage
+	mu         sync.Mutex
+}
+
+func NewBrowserManager(config BrowserConfig) *BrowserManager {
+	return &BrowserManager{
+		Config: config,
+	}
+}
+
+func (m *BrowserManager) Launch() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	mode := "Windowed"
+	if m.Config.Headless {
+		mode = "Headless"
+	}
+	fmt.Printf("[Browser:Manager] Launching %s Chrome via CDP...\n", mode)
+	m.ActivePage = NewCdpPage()
+	return nil
+}
+
+func triggerBrowserDemo() {
+	config := BrowserConfig{
+		Headless: true,
+		Viewport: ViewportConfig{
+			Width:             1280,
+			Height:            720,
+			DeviceScaleFactor: 1.0,
+		},
+	}
+
+	manager := NewBrowserManager(config)
+	if err := manager.Launch(); err == nil {
+		if page := manager.ActivePage; page != nil {
+			page.Navigate("https://github.com/just-every/code")
+			page.DispatchMouseEvent(250.0, 300.0, "click")
+			page.DispatchKeyEvent("Hello Warp!")
+			page.CaptureScreenshot()
+		}
 	}
 }

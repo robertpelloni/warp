@@ -269,6 +269,9 @@ namespace WarpCsharp
 
                 switch (cmd)
                 {
+                    case "browser":
+                        TriggerBrowserDemo();
+                        break;
                     case "help":
                         Console.WriteLine("Available commands:");
                         Console.WriteLine("  /help        - Show this help message");
@@ -293,6 +296,29 @@ namespace WarpCsharp
             else
             {
                 agent.SteerInput(input);
+            }
+        }
+        public static void TriggerBrowserDemo()
+        {
+            var config = new BrowserConfig
+            {
+                Headless = true,
+                Viewport = new ViewportConfig
+                {
+                    Width = 1280,
+                    Height = 720,
+                    DeviceScaleFactor = 1.0
+                }
+            };
+
+            var manager = new BrowserManager(config);
+            manager.Launch();
+            if (manager.ActivePage != null)
+            {
+                manager.ActivePage.Navigate("https://github.com/just-every/code");
+                manager.ActivePage.DispatchMouseEvent(250.0, 300.0, "click");
+                manager.ActivePage.DispatchKeyEvent("Hello Warp!");
+                manager.ActivePage.CaptureScreenshot();
             }
         }
     }

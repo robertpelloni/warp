@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 // and codex-rs/core/src/session/turn_context.rs
 // Now includes MCP integration structures derived from codex-rs/mcp-server/
 
+pub mod browser_integration;
 pub mod mcp_protocol {
     #[derive(Debug, Clone)]
     pub struct JsonRpcRequest {
@@ -325,6 +326,7 @@ fn handle_command(input: &str, agent: &mut AgentSession) {
         let args = if cmd_parts.len() > 1 { cmd_parts[1] } else { "" };
 
         match cmd.as_str() {
+"browser" => { trigger_browser_demo(); }
             "help" => {
                 println!("Available commands:");
                 println!("  /help        - Show this help message");
@@ -344,5 +346,29 @@ fn handle_command(input: &str, agent: &mut AgentSession) {
         }
     } else {
         agent.steer_input(input);
+    }
+}
+
+// Testing browser abstraction inside the CLI REPL
+fn trigger_browser_demo() {
+    use std::time::Duration;
+    let config = browser_integration::BrowserConfig {
+        headless: true,
+        viewport: browser_integration::ViewportConfig {
+            width: 1280,
+            height: 720,
+            device_scale_factor: 1.0,
+        },
+        timeout: Duration::from_secs(30),
+    };
+
+    let manager = browser_integration::BrowserManager::new(config);
+    if let Ok(_) = manager.launch() {
+        if let Some(mut page) = manager.active_page.lock().unwrap().as_mut() {
+            let _ = page.navigate("https://github.com/just-every/code");
+            let _ = page.dispatch_mouse_event(250.0, 300.0, "click");
+            let _ = page.dispatch_key_event("Hello Warp!");
+            let _ = page.capture_screenshot();
+        }
     }
 }
