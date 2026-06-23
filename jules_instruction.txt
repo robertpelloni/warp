@@ -1,0 +1,21 @@
+[PROJECT_MEMORY]
+
+# Ultimate Agentic Coding Harness Rebuild
+
+## Core Architecture and Multi-Language Setup
+This project aims to build a unified agentic coding harness identical across four languages: Rust (Root), Go (`warp-go`), C# (`warp-csharp`), and Java (`warp-java`). The goal is full feature parity with tools like `just-every-code` by analyzing their source and translating their functionality.
+
+## Functional Abstractions Ported
+We have actively ported several major architectural domains from `just-every-code` identically across all four language environments:
+1. **Tool Orchestration:** Ported the `ToolOrchestrator`, `ToolCtx`, `ToolRuntime`, and `SandboxAttempt` pipeline. The orchestrator drives tool execution by enforcing required approvals and sandbox isolation policies before running commands.
+2. **Agent Routing:** Implemented `TurnContext` and `AgentSession` state machines to route natural language prompts to executable commands within the `ToolOrchestrator` without mocked simulations.
+3. **MCP Integration:** Ported the Model Context Protocol (`mcp-server`) components. A `MessageProcessor` parses JSON-RPC commands (like `initialize` and `tools/call`) to dynamically register capabilities into the orchestrator.
+4. **Browser Integration:** Implemented the `BrowserManager` and `CdpPage` constructs, establishing a headless automation surface capable of managing browser configurations, executing navigation, dispatching DOM events (mouse/keys), and capturing screenshots.
+
+## Action Required for Next Step
+The next logical step is to port the `Thread Store` functionality from `just-every-code` into the four target languages. This component is crucial for database persistency and state recovery.
+1. Deep dive into `just-every-code` to understand the `Thread Store` implementation (e.g. `thread_store` or `state` tracking).
+2. Implement identical database persistency interfaces in Rust, Go, C#, and Java.
+3. Remove `just-every-code` as a submodule when completed, then import the next repo from the ROADMAP (`pi-mono`) to continue the cycle.
+
+*Remember: Never commit compiled artifacts. Update .gitignore as necessary.*
