@@ -235,6 +235,32 @@ public class Main {
 
     }
 
+    public static void triggerCompactionDemo() {
+
+        try {
+
+            SessionManager manager = new SessionManager("sess_pi_456", "/workspace", "/tmp/sessions");
+
+            manager.appendMessageEntry("1", "", "Initial prompt");
+
+            manager.appendMessageEntry("2", "1", "Assistant response");
+
+            manager.appendMessageEntry("3", "2", "Please refactor the function.");
+
+            CompactionPreparation prep = CompactionService.prepareCompaction(manager.fileEntries);
+
+            CompactionResult result = CompactionService.compact(prep);
+
+            System.out.printf("[Compaction] Successfully generated summary entry %s: \"%s\"%n", result.newEntryId, result.summary);
+
+        } catch (Exception e) {
+
+            System.out.println("[Error] " + e.getMessage());
+
+        }
+
+    }
+
     public static void triggerBrowserDemo() {
 
         BrowserConfig config = new BrowserConfig(
@@ -299,6 +325,9 @@ public class Main {
             String args = parts.length > 1 ? parts[1].trim() : "";
 
             switch (cmd) {
+                case "compact":
+                    triggerCompactionDemo();
+                    break;
                 case "pimono":
                     triggerPiMonoDemo();
                     break;
@@ -457,5 +486,70 @@ class SessionManager {
         SessionMessageEntry entry = new SessionMessageEntry(id, parentId, "now", message);
         this.fileEntries.add(entry);
         System.out.printf("[SessionManager] Appended Message: %s%n", message);
+    }
+}
+
+// --- Context Compaction Abstractions ---
+
+class FileOperations {
+    public java.util.Set<String> read = new java.util.HashSet<>();
+    public java.util.Set<String> written = new java.util.HashSet<>();
+    public java.util.Set<String> edited = new java.util.HashSet<>();
+}
+
+class CompactionPreparation {
+    public String firstKeptEntryId;
+    public java.util.List<String> messagesToSummarize;
+    public java.util.List<String> turnPrefixMessages;
+    public boolean isSplitTurn;
+    public int tokensBefore;
+    public String previousSummary;
+    public FileOperations fileOps;
+
+    public CompactionPreparation() {
+        this.messagesToSummarize = new java.util.ArrayList<>();
+        this.turnPrefixMessages = new java.util.ArrayList<>();
+        this.fileOps = new FileOperations();
+    }
+}
+
+class CompactionResult {
+    public String summary;
+    public String newEntryId;
+}
+
+class CompactionService {
+    public static CompactionPreparation prepareCompaction(java.util.List<Object> entries) throws Exception {
+        System.out.printf("[Compaction] Analyzing %d session entries for compaction...%n", entries.size());
+
+        if (entries.isEmpty()) {
+            throw new Exception("no entries to compact");
+        }
+
+        CompactionPreparation prep = new CompactionPreparation();
+        prep.firstKeptEntryId = "entry_xyz";
+        prep.messagesToSummarize.add("User asked to build feature");
+        prep.messagesToSummarize.add("Assistant planned feature");
+        prep.tokensBefore = 4500;
+        prep.previousSummary = "Previous session context...";
+
+        prep.fileOps.read.add("/workspace/main.go");
+        prep.fileOps.edited.add("/workspace/README.md");
+
+        return prep;
+    }
+
+    public static CompactionResult compact(CompactionPreparation prep) {
+        System.out.printf("[Compaction] Compacting %d tokens down to summary...%n", prep.tokensBefore);
+
+        String summary = String.format("Summarized %d messages including: %s",
+                prep.messagesToSummarize.size(),
+                prep.messagesToSummarize.get(0));
+
+        CompactionResult result = new CompactionResult();
+        result.summary = summary;
+        result.newEntryId = "compact_abc123";
+
+        return result;
     }
 }

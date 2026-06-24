@@ -327,6 +327,7 @@ fn handle_command(input: &str, agent: &mut AgentSession) {
 
         match cmd.as_str() {
 "browser" => { trigger_browser_demo(); }
+"compact" => { trigger_compaction_demo(); }
 "pimono" => { trigger_pimono_demo(); }
             "help" => {
                 println!("Available commands:");
@@ -436,4 +437,99 @@ fn trigger_pimono_demo() {
     manager.append_message_entry("1", "", "Initial prompt");
     manager.append_message_entry("2", "1", "Assistant response");
     println!("[SessionManager] Tracked entries: {}", manager.file_entries.len());
+}
+
+// --- Context Compaction Abstractions ---
+
+use std::collections::HashSet;
+
+#[derive(Debug, Clone)]
+pub struct FileOperations {
+    pub read: HashSet<String>,
+    pub written: HashSet<String>,
+    pub edited: HashSet<String>,
+}
+
+impl FileOperations {
+    pub fn new() -> Self {
+        Self {
+            read: HashSet::new(),
+            written: HashSet::new(),
+            edited: HashSet::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CompactionPreparation {
+    pub first_kept_entry_id: String,
+    pub messages_to_summarize: Vec<String>,
+    pub turn_prefix_messages: Vec<String>,
+    pub is_split_turn: bool,
+    pub tokens_before: usize,
+    pub previous_summary: String,
+    pub file_ops: FileOperations,
+}
+
+#[derive(Debug, Clone)]
+pub struct CompactionResult {
+    pub summary: String,
+    pub new_entry_id: String,
+}
+
+pub struct CompactionService;
+
+impl CompactionService {
+    pub fn prepare_compaction(entries: &[SessionMessageEntry]) -> Result<CompactionPreparation, String> {
+        println!("[Compaction] Analyzing {} session entries for compaction...", entries.len());
+
+        if entries.is_empty() {
+            return Err("no entries to compact".into());
+        }
+
+        let mut prep = CompactionPreparation {
+            first_kept_entry_id: "entry_xyz".into(),
+            messages_to_summarize: vec!["User asked to build feature".into(), "Assistant planned feature".into()],
+            turn_prefix_messages: Vec::new(),
+            is_split_turn: false,
+            tokens_before: 4500,
+            previous_summary: "Previous session context...".into(),
+            file_ops: FileOperations::new(),
+        };
+
+        prep.file_ops.read.insert("/workspace/main.go".into());
+        prep.file_ops.edited.insert("/workspace/README.md".into());
+
+        Ok(prep)
+    }
+
+    pub fn compact(prep: &CompactionPreparation) -> CompactionResult {
+        println!("[Compaction] Compacting {} tokens down to summary...", prep.tokens_before);
+
+        let summary = format!(
+            "Summarized {} messages including: {}",
+            prep.messages_to_summarize.len(),
+            prep.messages_to_summarize.first().unwrap_or(&String::new())
+        );
+
+        CompactionResult {
+            summary,
+            new_entry_id: "compact_abc123".into(),
+        }
+    }
+}
+
+fn trigger_compaction_demo() {
+    let mut manager = SessionManager::new("sess_pi_456", "/workspace", "/tmp/sessions");
+    manager.append_message_entry("1", "", "Initial prompt");
+    manager.append_message_entry("2", "1", "Assistant response");
+    manager.append_message_entry("3", "2", "Please refactor the function.");
+
+    match CompactionService::prepare_compaction(&manager.file_entries) {
+        Ok(prep) => {
+            let result = CompactionService::compact(&prep);
+            println!("[Compaction] Successfully generated summary entry {}: '{}'", result.new_entry_id, result.summary);
+        }
+        Err(e) => println!("[Error] {}", e),
+    }
 }

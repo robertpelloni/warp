@@ -269,6 +269,9 @@ namespace WarpCsharp
 
                 switch (cmd)
                 {
+                    case "compact":
+                        TriggerCompactionDemo();
+                        break;
                     case "pimono":
                         TriggerPiMonoDemo();
                         break;
@@ -329,6 +332,17 @@ namespace WarpCsharp
 
             var history = store.LoadHistory(threadId);
             Console.WriteLine($"[ThreadStore] Loaded thread history items: {history.Items.Count}");
+        }
+
+        public static void TriggerCompactionDemo()
+        {
+            var manager = new SessionManager("sess_pi_456", "/workspace", "/tmp/sessions");
+            manager.AppendMessageEntry("1", "", "Initial prompt");
+            manager.AppendMessageEntry("2", "1", "Assistant response");
+            manager.AppendMessageEntry("3", "2", "Please refactor the function.");
+            var prep = CompactionService.PrepareCompaction(manager.FileEntries);
+            var result = CompactionService.Compact(prep);
+            Console.WriteLine($"[Compaction] Successfully generated summary entry {result.NewEntryId}: \"{result.Summary}\"");
         }
 
         public static void TriggerBrowserDemo()
