@@ -269,6 +269,12 @@ namespace WarpCsharp
 
                 switch (cmd)
                 {
+                    case "pimono":
+                        TriggerPiMonoDemo();
+                        break;
+                    case "store":
+                        TriggerThreadStoreDemo();
+                        break;
                     case "browser":
                         TriggerBrowserDemo();
                         break;
@@ -298,6 +304,33 @@ namespace WarpCsharp
                 agent.SteerInput(input);
             }
         }
+        public static void TriggerPiMonoDemo()
+        {
+            var manager = new SessionManager("sess_pi_456", "/workspace", "/tmp/sessions");
+            manager.AppendMessageEntry("1", "", "Initial prompt");
+            manager.AppendMessageEntry("2", "1", "Assistant response");
+            Console.WriteLine($"[SessionManager] Tracked entries: {manager.FileEntries.Count}");
+        }
+
+        public static void TriggerThreadStoreDemo()
+        {
+            var store = new InMemoryThreadStore();
+            string threadId = "test-thread-123";
+
+            Console.WriteLine($"[ThreadStore] Creating thread: {threadId}");
+            store.CreateThread(threadId, "/workspace");
+
+            Console.WriteLine("[ThreadStore] Appending history items...");
+            store.AppendItem(threadId, "{\"event\":\"user_input\", \"content\":\"hello\"}");
+            store.AppendItem(threadId, "{\"event\":\"agent_reply\", \"content\":\"hi there!\"}");
+
+            var threadInfo = store.LoadThread(threadId);
+            Console.WriteLine($"[ThreadStore] Loaded thread metadata: StoredThread {{ ThreadId: \"{threadInfo.ThreadId}\", Preview: \"{threadInfo.Preview}\", Cwd: \"{threadInfo.Cwd}\" }}");
+
+            var history = store.LoadHistory(threadId);
+            Console.WriteLine($"[ThreadStore] Loaded thread history items: {history.Items.Count}");
+        }
+
         public static void TriggerBrowserDemo()
         {
             var config = new BrowserConfig

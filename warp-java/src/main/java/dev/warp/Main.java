@@ -223,6 +223,18 @@ class AgentSession {
 }
 
 public class Main {
+    public static void triggerPiMonoDemo() {
+
+        SessionManager manager = new SessionManager("sess_pi_456", "/workspace", "/tmp/sessions");
+
+        manager.appendMessageEntry("1", "", "Initial prompt");
+
+        manager.appendMessageEntry("2", "1", "Assistant response");
+
+        System.out.printf("[SessionManager] Tracked entries: %d%n", manager.fileEntries.size());
+
+    }
+
     public static void triggerBrowserDemo() {
 
         BrowserConfig config = new BrowserConfig(
@@ -287,6 +299,9 @@ public class Main {
             String args = parts.length > 1 ? parts[1].trim() : "";
 
             switch (cmd) {
+                case "pimono":
+                    triggerPiMonoDemo();
+                    break;
                 case "browser":
                     triggerBrowserDemo();
                     break;
@@ -390,5 +405,57 @@ class BrowserManager {
         String mode = config.headless ? "Headless" : "Windowed";
         System.out.printf("[Browser:Manager] Launching %s Chrome via CDP...%n", mode);
         this.activePage = new CdpPage();
+    }
+}
+
+// --- Pi-Mono Specific Abstractions ---
+
+enum SessionEntryType {
+    MESSAGE,
+    MODEL_CHANGE,
+    COMPACTION,
+    BRANCH_SUMMARY
+}
+
+class SessionEntryBase {
+    public SessionEntryType type;
+    public String id;
+    public String parentId;
+    public String timestamp;
+
+    public SessionEntryBase(SessionEntryType type, String id, String parentId, String timestamp) {
+        this.type = type;
+        this.id = id;
+        this.parentId = parentId;
+        this.timestamp = timestamp;
+    }
+}
+
+class SessionMessageEntry extends SessionEntryBase {
+    public String message;
+
+    public SessionMessageEntry(String id, String parentId, String timestamp, String message) {
+        super(SessionEntryType.MESSAGE, id, parentId, timestamp);
+        this.message = message;
+    }
+}
+
+class SessionManager {
+    public String sessionId;
+    public String cwd;
+    public String sessionDir;
+    public java.util.List<Object> fileEntries;
+
+    public SessionManager(String sessionId, String cwd, String sessionDir) {
+        this.sessionId = sessionId;
+        this.cwd = cwd;
+        this.sessionDir = sessionDir;
+        this.fileEntries = new java.util.ArrayList<>();
+    }
+
+    public void appendMessageEntry(String id, String parentId, String message) {
+        SessionMessageEntry entry = new SessionMessageEntry(id, parentId, "now", message);
+        this.fileEntries.add(entry);
+        System.out.printf("[SessionManager] Appended Message: %s%n", message);
     }
 }

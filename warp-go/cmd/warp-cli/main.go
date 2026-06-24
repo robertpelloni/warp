@@ -257,6 +257,8 @@ func handleCommand(input string, agent *AgentSession) {
 		switch cmd {
 		case "browser":
 			triggerBrowserDemo()
+		case "pimono":
+			triggerPiMonoDemo()
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("  /help        - Show this help message")
@@ -377,4 +379,70 @@ func triggerBrowserDemo() {
 			page.CaptureScreenshot()
 		}
 	}
+}
+
+// --- Pi-Mono Specific Abstractions ---
+
+type SessionEntryType string
+
+const (
+	TypeMessage       SessionEntryType = "message"
+	TypeModelChange   SessionEntryType = "model_change"
+	TypeCompaction    SessionEntryType = "compaction"
+	TypeBranchSummary SessionEntryType = "branch_summary"
+)
+
+type SessionEntryBase struct {
+	Type      SessionEntryType `json:"type"`
+	ID        string           `json:"id"`
+	ParentID  string           `json:"parentId"`
+	Timestamp string           `json:"timestamp"`
+}
+
+type SessionMessageEntry struct {
+	SessionEntryBase
+	Message string `json:"message"`
+}
+
+type ModelChangeEntry struct {
+	SessionEntryBase
+	Provider string `json:"provider"`
+	ModelID  string `json:"modelId"`
+}
+
+type SessionManager struct {
+	SessionID string
+	SessionDir string
+	Cwd string
+	FileEntries []interface{}
+}
+
+func NewSessionManager(sessionID, cwd, sessionDir string) *SessionManager {
+	return &SessionManager{
+		SessionID: sessionID,
+		Cwd: cwd,
+		SessionDir: sessionDir,
+		FileEntries: make([]interface{}, 0),
+	}
+}
+
+func (s *SessionManager) AppendMessageEntry(id, parentId, message string) {
+	entry := SessionMessageEntry{
+		SessionEntryBase: SessionEntryBase{
+			Type: TypeMessage,
+			ID: id,
+			ParentID: parentId,
+			Timestamp: "now",
+		},
+		Message: message,
+	}
+	s.FileEntries = append(s.FileEntries, entry)
+	fmt.Printf("[SessionManager] Appended %s: %s\n", TypeMessage, message)
+}
+
+func triggerPiMonoDemo() {
+	manager := NewSessionManager("sess_pi_456", "/workspace", "/tmp/sessions")
+	manager.AppendMessageEntry("1", "", "Initial prompt")
+	manager.AppendMessageEntry("2", "1", "Assistant response")
+	fmt.Printf("[SessionManager] Tracked entries: %d\n", len(manager.FileEntries))
 }

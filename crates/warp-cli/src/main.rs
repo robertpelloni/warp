@@ -327,6 +327,7 @@ fn handle_command(input: &str, agent: &mut AgentSession) {
 
         match cmd.as_str() {
 "browser" => { trigger_browser_demo(); }
+"pimono" => { trigger_pimono_demo(); }
             "help" => {
                 println!("Available commands:");
                 println!("  /help        - Show this help message");
@@ -371,4 +372,68 @@ fn trigger_browser_demo() {
             let _ = page.capture_screenshot();
         }
     }
+}
+
+// --- Pi-Mono Specific Abstractions ---
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SessionEntryType {
+    Message,
+    ModelChange,
+    Compaction,
+    BranchSummary,
+}
+
+#[derive(Debug, Clone)]
+pub struct SessionEntryBase {
+    pub entry_type: SessionEntryType,
+    pub id: String,
+    pub parent_id: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct SessionMessageEntry {
+    pub base: SessionEntryBase,
+    pub message: String,
+}
+
+pub struct SessionManager {
+    pub session_id: String,
+    pub cwd: String,
+    pub session_dir: String,
+    pub file_entries: Vec<SessionMessageEntry>, // Simplified representation
+}
+
+impl SessionManager {
+    pub fn new(session_id: &str, cwd: &str, session_dir: &str) -> Self {
+        Self {
+            session_id: session_id.to_string(),
+            cwd: cwd.to_string(),
+            session_dir: session_dir.to_string(),
+            file_entries: Vec::new(),
+        }
+    }
+
+    pub fn append_message_entry(&mut self, id: &str, parent_id: &str, message: &str) {
+        let entry = SessionMessageEntry {
+            base: SessionEntryBase {
+                entry_type: SessionEntryType::Message,
+                id: id.to_string(),
+                parent_id: parent_id.to_string(),
+                timestamp: "now".to_string(),
+            },
+            message: message.to_string(),
+        };
+        self.file_entries.push(entry);
+        println!("[SessionManager] Appended Message: {}", message);
+    }
+}
+
+// Testing Pi-Mono abstraction inside the CLI REPL
+fn trigger_pimono_demo() {
+    let mut manager = SessionManager::new("sess_pi_456", "/workspace", "/tmp/sessions");
+    manager.append_message_entry("1", "", "Initial prompt");
+    manager.append_message_entry("2", "1", "Assistant response");
+    println!("[SessionManager] Tracked entries: {}", manager.file_entries.len());
 }
