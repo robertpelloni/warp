@@ -1,0 +1,7 @@
+--- TODO.md
++++ TODO.md
+@@ -16,3 +16,4 @@
+ ## New Tasks Generated from Roadmap
+-x 1. Build a basic remote Server Host for WebUI interactions in Go.
++1. Build a basic remote Server Host for WebUI interactions in Go.
+ 2. Build an initial WebUI to interface with the Go Server Host (React/Vite).
