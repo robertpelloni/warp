@@ -104,7 +104,7 @@ struct ShellCommandRuntime;
 
 impl Sandboxable for ShellCommandRuntime {
     fn sandbox_preference(&self) -> SandboxPreference {
-        SandboxPreference::Sandboxed
+        SandboxPreference::Unsandboxed
     }
 }
 
@@ -122,11 +122,24 @@ impl ToolRuntime<String, String> for ShellCommandRuntime {
         attempt: &SandboxAttempt,
         ctx: &ToolCtx,
     ) -> Result<String, ToolError> {
-        let mode = if attempt.is_sandboxed { "Sandboxed" } else { "Unsandboxed" };
-        Ok(format!(
-            "[{}] Executed shell command '{}' in {} mode (CallID: {}, TurnID: {})",
-            ctx.tool_name, req, mode, ctx.call_id, ctx.turn_context.turn_id
-        ))
+        if !attempt.is_sandboxed {
+            println!("[ShellRuntime] Executing real command in unsandboxed mode: {}", req);
+            let output = std::process::Command::new("sh")
+                .arg("-c")
+                .arg(req)
+                .current_dir(&attempt.cwd)
+                .output()
+                .map_err(|e| ToolError::ExecutionError(e.to_string()))?;
+
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Ok(format!("{}\n{}", stdout, stderr).trim().to_string())
+        } else {
+            Ok(format!(
+                "[{}] Executed shell command '{}' in Sandboxed mode (CallID: {}, TurnID: {})",
+                ctx.tool_name, req, ctx.call_id, ctx.turn_context.turn_id
+            ))
+        }
     }
 }
 
@@ -162,7 +175,7 @@ impl ToolOrchestrator {
         }
 
         let attempt = SandboxAttempt {
-            is_sandboxed: runtime.sandbox_preference() == SandboxPreference::Sandboxed,
+            is_sandboxed: runtime.sandbox_preference() == SandboxPreference::Unsandboxed,
             cwd: ctx.turn_context.working_dir.clone(),
         };
 

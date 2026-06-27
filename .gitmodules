@@ -1,3 +1,6 @@
 [submodule "submodules/pi-mono"]
 	path = submodules/pi-mono
 	url = https://github.com/badlogic/pi-mono
+[submodule "submodules/aider"]
+	path = submodules/aider
+	url = https://github.com/paul-gauthier/aider

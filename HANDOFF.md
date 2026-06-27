@@ -22,11 +22,12 @@ In the previous sessions, we transitioned submodules and structurally removed `j
     *   **Rust (`crates/warp-cli`)**: Implemented using `tokio::sync::mpsc` channels and `async_trait` for the asynchronous event stream.
 *   Integrated dummy providers (OpenAI, Anthropic) and exposed a generic `/ai` command to invoke a dual concurrent execution stream simulation across all platforms.
 
-## Session Update: HTTP API Integrations & MCP Protocol Adherence
-*   Successfully transitioned the mock `DummyProvider` LLM abstractions to fully functional REST HTTP streaming clients in all four languages targeting the OpenAI API spec.
-    *   **Rust**: Migrated to `reqwest` and `eventsource-stream`.
-    *   **Go**: Utilized built in `net/http` and `bufio.Scanner` for chunk reading.
-    *   **C#**: Wired via `HttpClient` and `System.Text.Json.JsonDocument` parser.
-    *   **Java**: Deployed the native `java.net.http.HttpClient` publisher sequence with naive JSON delta extraction.
-*   Abstracted away the raw strings for the MCP Server initialization sequence into structured JSON-RPC payloads matching the Model Context Protocol (MCP) using struct bindings (`JsonRpcRequest`, `JsonRpcResponse`, `CallToolRequestParams`).
-*   Verified cross-platform stability by passing all execution scripts against the active compiler directives.
+## AST / Repository Map Feature Evaluation
+* Cloned `aider` as a submodule to analyze its `repomap.py` architecture.
+* Discovered it leverages `tree_sitter` via the `grep_ast` wrapper (`get_language`, `get_parser`) to parse source code into an Abstract Syntax Tree (AST).
+* It queries the AST using `.scm` query definitions (Scheme files defined by tree-sitter language packs) to extract class names, methods, and declarations (`get_tags_raw`).
+* It then uses a personalized PageRank algorithm (via NetworkX) to establish the importance of identifiers across files (`get_ranked_tags`), rendering an abridged map showing only the most relevant definitions related to the currently requested edits.
+* **Porting Strategy:** To replicate this across Rust, Go, C#, and Java, we will need to utilize `tree-sitter` native bindings (e.g., `tree-sitter-rs` in Rust) or call out to an external tree-sitter microservice. Since the primary `Warp` backend runs in Go, utilizing `go-tree-sitter` inside the Go agent process to build this repository AST map natively would be the optimal integration path for cross-platform availability.
+
+## Execution Runtime Evaluation
+* Enhanced the `mcp_shell` dynamic tool inside the Rust orchestrator to conditionally hook into `std::process::Command` when in an `Unsandboxed` attempt payload mode, allowing for live shell command execution dynamically mapped from Agent output, routing standard stdout and stderr back into the agent context stream dynamically.
