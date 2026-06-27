@@ -15,3 +15,9 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 1. Build a basic remote Server Host for WebUI interactions in Go.
 2. Build an initial WebUI to interface with the Go Server Host (React/Vite).
 3. Integrate the React/Vite WebUI with the Go Server Host using WebSocket connections for real-time text streaming.
+
+## Completed Tasks
+- Added basic structual features for `tabby` in Go, Rust, C#, and Java.
+
+5. Clone the `codex-cli` repository as a submodule to analyze and port its features.
+6. Clone the `gemini-cli` repository as a submodule to analyze and port its features.
