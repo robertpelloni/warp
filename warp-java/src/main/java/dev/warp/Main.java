@@ -340,6 +340,9 @@ public class Main {
                     System.out.println("  /prompt <msg>- Send a natural language prompt to the agent");
                     System.out.println("  quit         - Quit the application");
                     break;
+                case "ai":
+                    AiDemo.triggerAiDemo();
+                    break;
                 case "prompt":
                     if (args.isEmpty()) {
                         System.out.println("[Error] /prompt requires a message.");

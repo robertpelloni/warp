@@ -21,3 +21,12 @@ In the previous sessions, we transitioned submodules and structurally removed `j
     *   **Java (`warp-java`)**: Implemented via Reactive Streams (`java.util.concurrent.Flow.Publisher`)
     *   **Rust (`crates/warp-cli`)**: Implemented using `tokio::sync::mpsc` channels and `async_trait` for the asynchronous event stream.
 *   Integrated dummy providers (OpenAI, Anthropic) and exposed a generic `/ai` command to invoke a dual concurrent execution stream simulation across all platforms.
+
+## Session Update: HTTP API Integrations & MCP Protocol Adherence
+*   Successfully transitioned the mock `DummyProvider` LLM abstractions to fully functional REST HTTP streaming clients in all four languages targeting the OpenAI API spec.
+    *   **Rust**: Migrated to `reqwest` and `eventsource-stream`.
+    *   **Go**: Utilized built in `net/http` and `bufio.Scanner` for chunk reading.
+    *   **C#**: Wired via `HttpClient` and `System.Text.Json.JsonDocument` parser.
+    *   **Java**: Deployed the native `java.net.http.HttpClient` publisher sequence with naive JSON delta extraction.
+*   Abstracted away the raw strings for the MCP Server initialization sequence into structured JSON-RPC payloads matching the Model Context Protocol (MCP) using struct bindings (`JsonRpcRequest`, `JsonRpcResponse`, `CallToolRequestParams`).
+*   Verified cross-platform stability by passing all execution scripts against the active compiler directives.
