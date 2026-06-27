@@ -9,12 +9,22 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type StatusResponse struct {
 	Status  string `json:"status"`
 	Version string `json:"version"`
 	Message string `json:"message"`
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -50,6 +60,30 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(resp)
+	})
+
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Printf("[WebSocket] Upgrade failed: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		log.Println("[WebSocket] Client connected")
+
+		for {
+			messageType, p, err := conn.ReadMessage()
+			if err != nil {
+				log.Printf("[WebSocket] Error reading message: %v", err)
+				break
+			}
+
+			log.Printf("[WebSocket] Received: %s", string(p))
+
+			resp := []byte(fmt.Sprintf("Agent echo: %s", p))
+			conn.WriteMessage(messageType, resp)
+		}
 	})
 
 	port := os.Getenv("PORT")

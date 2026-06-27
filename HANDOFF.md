@@ -42,3 +42,11 @@ In the previous sessions, we transitioned submodules and structurally removed `j
 * Initiated the `warp-ui` repository structure utilizing `pnpm`, `Vite`, and `React 19`.
 * Implemented a baseline `.tsx` structure to actively connect and fetch payload statuses from `http://localhost:8080/status` (the newly deployed Go backend).
 * Cleared up `vite.svg` build resolution bugs and generated the first successful `dist` rendering package for the UI.
+
+## WebUI React WebSocket Sub-System
+* Wired the `warp-ui` React payload component to the `warp-go` backend's `ws://localhost:8080/ws` endpoint.
+* Input values in the UI dynamically pass through the socket, returning real-time response evaluations parsed cleanly into a visual terminal block in the DOM.
+
+## WebUI React WebSocket Sub-System
+* Wired the `warp-ui` React payload component to the `warp-go` backend's `ws://localhost:8080/ws` endpoint.
+* Input values in the UI dynamically pass through the socket, returning real-time response evaluations parsed cleanly into a visual terminal block in the DOM.
