@@ -7,6 +7,10 @@ x 3. Migrate the `MCP Server` abstractions from the generic "hello world" JSON-R
 x 4. Clone the `aider` repository as a submodule to begin evaluating and porting its repository map (Tree-sitter AST) mechanics.
 
 ## Medium Priority
-1. Establish unit testing suites for the `ThreadStore` persistent layer.
+x 1. Establish unit testing suites for the `ThreadStore` persistent layer.
 2. Ensure consistent logging verbosity across the 4 languages.
 x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actually invoke `std::process::Command` when running in unsandboxed environments.
+
+## New Tasks Generated from Roadmap
+1. Build a basic remote Server Host for WebUI interactions in Go.
+2. Build an initial WebUI to interface with the Go Server Host (React/Vite).

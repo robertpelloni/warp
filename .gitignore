@@ -64,3 +64,4 @@ warp-go/warp-cli
 warp-csharp/WarpCsharp/bin/
 warp-csharp/WarpCsharp/obj/
 warp-java/target/
+warp-go/warp-server
