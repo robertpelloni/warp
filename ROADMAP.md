@@ -22,3 +22,7 @@ To build the ULTIMATE AGENTIC CODING HARNESS achieving full feature parity with 
 - [x] Expose an internal JSON-RPC interface for browser extension control.
 - [x] Implement Mobile-friendly WebUI for remote Agent operation.
 - [x] Develop native integration with Chromium DevTools to scrape network activity.
+
+## Phase 4: Production & Deployment
+- [ ] Stabilize all endpoints.
+- [x] Remove UNDER CONSTRUCTION banner.

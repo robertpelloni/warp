@@ -48,3 +48,9 @@ x 17. Improve documentation coverage for `warp-go` endpoints.
 x 18. Improve test coverage for Go modules.
 
 19. Ensure consistent logging verbosity across the 4 languages.
+
+x 20. Verify UI jitter fix.
+
+21. Ensure cross-platform build pipelines for binaries.
+
+22. Final UI Polish before v1.0.
