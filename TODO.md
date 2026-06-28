@@ -23,3 +23,8 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 6. Clone the `gemini-cli` repository as a submodule to analyze and port its features.
 
 7. Port remaining `aider` core features to Go, C#, Java, and Rust.
+
+8. Document and port core mechanics from `codex-cli` and `gemini-cli`.
+- Completed documentation of `codex-cli` mechanics.
+
+9. Build browser extension mechanics and integrate JSON-RPC interface for browser extension control.
