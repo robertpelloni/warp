@@ -40,3 +40,5 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 14. Deploy fully functional mobile app that wraps the web interface for mobile environments.
 
 15. Complete Phase 3 deployment.
+
+16. Add detailed UI testing suite for WebUI React components.
