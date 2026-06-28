@@ -37,3 +37,10 @@ npm run dev &
 ```
 
 For full environment deployment details, see `DEPLOY.md`.
+
+## Contribution Guidelines
+
+1. Fork and create a feature branch.
+2. Maintain the Four-Pillar Redundancy by ensuring changes in one backend language are replicated in the others where applicable.
+3. Write test cases for new API handlers or core components.
+4. Open a pull request against the `master` branch.

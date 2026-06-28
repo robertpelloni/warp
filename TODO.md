@@ -43,4 +43,8 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 
 x 16. Add detailed UI testing suite for WebUI React components.
 
-17. Improve documentation coverage for `warp-go` endpoints.
+x 17. Improve documentation coverage for `warp-go` endpoints.
+
+x 18. Improve test coverage for Go modules.
+
+19. Ensure consistent logging verbosity across the 4 languages.
