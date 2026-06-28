@@ -40,6 +40,9 @@ func main() {
 		fmt.Fprintf(w, "Warp Go Server Backend is operational.\n\nUse /status for health checks.")
 	})
 
+	mux.HandleFunc("/agent", handleAgent)
+	mux.HandleFunc("/fs", handleFs)
+
 	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 

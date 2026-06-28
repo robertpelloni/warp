@@ -30,3 +30,9 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 9. Build browser extension mechanics and integrate JSON-RPC interface for browser extension control.
 
 10. Deploy and verify browser extensions for compatibility across major browsers.
+
+11. Implement multi-agent routing.
+
+12. Implement git automation commands and CI pipeline auto-fixes.
+
+13. Implement comprehensive deep dependency tree static analysis functions.

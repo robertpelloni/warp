@@ -11,9 +11,9 @@ To build the ULTIMATE AGENTIC CODING HARNESS achieving full feature parity with 
 - [x] Generic LLM Provider Registry and stream mechanics (`Model`, `Context`, `EventStream`).
 
 ## Phase 2: Agent Orchestration & Tooling
-- [ ] Incorporate comprehensive sandbox filesystem management tools.
+- [x] Incorporate comprehensive sandbox filesystem management tools.
 - [ ] Add `git` automation commands, automated patch-resolution, and CI pipeline auto-fixes.
-- [ ] Implement multi-agent routing (Architect, Executor, Auditor).
+- [x] Implement multi-agent routing (Architect, Executor, Auditor).
 - [x] Connect LLM API Provider Registry to external HTTP streaming endpoints (OpenAI, Anthropic API wiring).
 - [ ] Implement deep dependency tree static analysis functions.
 
