@@ -12,13 +12,13 @@ To build the ULTIMATE AGENTIC CODING HARNESS achieving full feature parity with 
 
 ## Phase 2: Agent Orchestration & Tooling
 - [x] Incorporate comprehensive sandbox filesystem management tools.
-- [ ] Add `git` automation commands, automated patch-resolution, and CI pipeline auto-fixes.
+- [x] Add `git` automation commands, automated patch-resolution, and CI pipeline auto-fixes.
 - [x] Implement multi-agent routing (Architect, Executor, Auditor).
 - [x] Connect LLM API Provider Registry to external HTTP streaming endpoints (OpenAI, Anthropic API wiring).
-- [ ] Implement deep dependency tree static analysis functions.
+- [x] Implement deep dependency tree static analysis functions.
 
 ## Phase 3: External Platform & IDE Integration
 - [x] Implement MCP Server features allowing Warp to act as a toolset within Claude Desktop / Cursor.
-- [ ] Expose an internal JSON-RPC interface for browser extension control.
-- [ ] Implement Mobile-friendly WebUI for remote Agent operation.
-- [ ] Develop native integration with Chromium DevTools to scrape network activity.
+- [x] Expose an internal JSON-RPC interface for browser extension control.
+- [x] Implement Mobile-friendly WebUI for remote Agent operation.
+- [x] Develop native integration with Chromium DevTools to scrape network activity.

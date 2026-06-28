@@ -42,6 +42,9 @@ func main() {
 
 	mux.HandleFunc("/agent", handleAgent)
 	mux.HandleFunc("/fs", handleFs)
+	mux.HandleFunc("/git", handleGit)
+	mux.HandleFunc("/ast", handleAst)
+	mux.HandleFunc("/cdp", handleCdp)
 
 	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
