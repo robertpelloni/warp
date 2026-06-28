@@ -28,3 +28,5 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 - Completed documentation of `codex-cli` mechanics.
 
 9. Build browser extension mechanics and integrate JSON-RPC interface for browser extension control.
+
+10. Deploy and verify browser extensions for compatibility across major browsers.
