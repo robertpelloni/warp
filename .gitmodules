@@ -4,3 +4,12 @@
 [submodule "submodules/aider"]
 	path = submodules/aider
 	url = https://github.com/paul-gauthier/aider
+[submodule "submodules/tabby"]
+	path = submodules/tabby
+	url = https://github.com/TabbyML/tabby
+[submodule "submodules/warp"]
+	path = submodules/warp
+	url = https://github.com/warpdotdev/Warp
+[submodule "submodules/hyper"]
+	path = submodules/hyper
+	url = https://github.com/vercel/hyper
