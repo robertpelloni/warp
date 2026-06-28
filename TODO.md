@@ -21,3 +21,5 @@ x 3. Enhance the `mcp_shell` dynamic tool inside the Rust orchestrator to actual
 
 5. Clone the `codex-cli` repository as a submodule to analyze and port its features.
 6. Clone the `gemini-cli` repository as a submodule to analyze and port its features.
+
+7. Port remaining `aider` core features to Go, C#, Java, and Rust.
