@@ -12,3 +12,11 @@
 - Implemented `ThreadStore` context layers.
 - Ported `pi-mono` Context Compaction mechanics.
 - Headless Browser (CDP) skeleton classes.
+
+## [v1.0.0-alpha] - 2026-06-28
+### Added
+- Core Go agent loop with persistent state tracking in `.pi/`
+- Full NeRF pipeline (Ray generation, stratified sampling, MLP evaluation, Volume rendering)
+- JSON-RPC abstraction layer
+- `git`, `fs`, `ast`, and `cdp` modules
+- UI jitter fixes and end-to-end testing hooks

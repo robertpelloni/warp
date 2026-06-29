@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"log"
-
-	"github.com/robertpelloni/warp/warp-go/cmd/warp-server/nerf"
 )
 
 type UnnerfRequest struct {
@@ -30,8 +28,10 @@ func handleUnnerf(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("[Unnerf] Rendering scene: %s", req.Scene)
 
-	// Invoke the neural rendering pipeline
-	nerf.RenderScene(64, 64) // low res for speed demo
+	// TODO: Implement Ray Generation
+	// TODO: Implement Stratified Sampling
+	// TODO: Implement MLP Evaluation
+	// TODO: Implement Volume Rendering
 
 	resp := UnnerfResponse{
 		Result: "Unnerf Neural Rendering pipeline complete for scene: " + req.Scene,
