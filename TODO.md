@@ -49,8 +49,20 @@ x 18. Improve test coverage for Go modules.
 
 19. Ensure consistent logging verbosity across the 4 languages.
 
-x 20. Verify UI jitter fix.
+x x 20. Verify UI jitter fix.
 
 21. Ensure cross-platform build pipelines for binaries.
 
 22. Final UI Polish before v1.0.
+
+23. Add cross-language websocket tests.
+
+x 24. Implement Neural Radiance Fields (NeRF) algorithm in Go.
+
+x 25. Implement comprehensive unnerf algorithm including ray generation, stratified sampling, MLP evaluation, and volume rendering in Go.
+
+26. Verify full NeRF functionality in Go backend.
+
+27. Final polish for unnerf modules.
+
+28. Final Polish.

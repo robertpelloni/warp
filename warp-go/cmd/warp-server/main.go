@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,12 +9,6 @@ import (
 	"syscall"
 	"time"
 )
-
-type StatusResponse struct {
-	Status  string `json:"status"`
-	Version string `json:"version"`
-	Message string `json:"message"`
-}
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,18 +38,11 @@ func main() {
 	mux.HandleFunc("/git", handleGit)
 	mux.HandleFunc("/ast", handleAst)
 	mux.HandleFunc("/cdp", handleCdp)
-
-	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		resp := StatusResponse{
-			Status:  "online",
-			Version: "0.1.1",
-			Message: "Warp Agent HTTP/WebSocket Orchestrator Active",
-		}
-
-		json.NewEncoder(w).Encode(resp)
-	})
+	mux.HandleFunc("/nerf", handleNerf)
+	mux.HandleFunc("/unnerf", handleUnnerf)
+	mux.HandleFunc("/rpc", handleRPC)
+	mux.HandleFunc("/ws", handleWebSocket)
+	mux.HandleFunc("/status", handleStatus)
 
 	port := os.Getenv("PORT")
 	if port == "" {
