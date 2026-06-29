@@ -61,4 +61,16 @@ x 24. Implement Neural Radiance Fields (NeRF) algorithm in Go.
 
 x 25. Implement comprehensive unnerf algorithm including ray generation, stratified sampling, MLP evaluation, and volume rendering in Go.
 
-30. Beta testing.
+x 37. Verify integration with `npm run test`.
+
+38. Implement initial C# translation framework.
+
+x 39. Resolve gitignore tracking for `warp-csharp/Server`.
+
+40. Add proper .NET specific tools for compilation.
+
+41. Add setup scripts for streamlined contributor onboarding.
+
+## HALTED
+* Work halted on supervisor request.
+* All documentation synced up.

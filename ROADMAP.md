@@ -26,3 +26,6 @@ To build the ULTIMATE AGENTIC CODING HARNESS achieving full feature parity with 
 ## Phase 4: Production & Deployment
 - [x] Stabilize all endpoints.
 - [x] Remove UNDER CONSTRUCTION banner.
+
+## Phase 9: End-to-End Test and Polish
+- [ ] Add integration tests.

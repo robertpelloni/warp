@@ -16,7 +16,7 @@ func TestStatusHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		resp := StatusResponse{
+		resp := NewStatusResponse{
 			Status:  "online",
 			Version: "0.1.1",
 			Message: "Warp Agent HTTP/WebSocket Orchestrator Active",
@@ -31,7 +31,7 @@ func TestStatusHandler(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	var resp StatusResponse
+	var resp NewStatusResponse
 	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
 		t.Fatal(err)
 	}
