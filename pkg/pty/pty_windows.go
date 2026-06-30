@@ -192,7 +192,7 @@ func (wp *winPTY) Resize(cols, rows uint16) error {
 	return nil
 }
 
-func (wp *winPTY) Close() {
+func (wp *winPTY) Close() error {
 	if wp.conPty != 0 {
 		procClosePseudoConsole.Call(wp.conPty)
 		wp.conPty = 0
@@ -204,6 +204,7 @@ func (wp *winPTY) Close() {
 	if wp.outputPipe != 0 {
 		procCloseHandle.Call(wp.outputPipe)
 		wp.outputPipe = 0
+	return nil
 	}
 }
 
