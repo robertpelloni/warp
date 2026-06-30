@@ -29,3 +29,6 @@ To build the ULTIMATE AGENTIC CODING HARNESS achieving full feature parity with 
 
 ## Phase 9: End-to-End Test and Polish
 - [ ] Add integration tests.
+
+## Phase 14: Release v1.0
+- [ ] Tag and cut v1.0 release.
