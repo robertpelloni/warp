@@ -124,6 +124,14 @@ Contributors with several merged PRs may be invited to become collaborators. Col
 
 ## Development Setup
 
+See [DEPLOY.md](DEPLOY.md) and [ROADMAP.md](ROADMAP.md) for the Go engine specifics. Quick start for the Go version:
+
+```bash
+go mod tidy          # ensure dependencies are synced
+go build ./...       # compile the module
+./script/presubmit   # run go fmt, go test, and go build checks
+```
+
 See [README.md](README.md) and [WARP.md](WARP.md) for the full engineering guide. Quick start:
 
 ```bash

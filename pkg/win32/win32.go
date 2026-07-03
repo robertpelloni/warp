@@ -103,6 +103,7 @@ const (
 	WS_OVERLAPPEDWINDOW = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
 	WS_EX_APPWINDOW     = 0x00040000
 	WS_EX_CLIENTEDGE    = 0x00000200
+	WS_EX_TOPMOST       = 0x00000008
 
 	// Edit control styles
 	ES_MULTILINE     = 0x0004
@@ -293,6 +294,46 @@ type LOGFONTW struct {
 }
 
 // WindowProc is the window procedure callback type.
+// Tab Control constants
+const (
+	TCM_FIRST       = 0x1300
+	TCM_INSERTITEMW = TCM_FIRST + 62
+	TCM_SETCURSEL   = TCM_FIRST + 12
+	TCM_GETCURSEL   = TCM_FIRST + 11
+	TCIF_TEXT       = 0x0001
+)
+
+// Tooltip constants
+const (
+	TOOLTIPS_CLASSW = "tooltips_class32"
+	TTF_SUBCLASS    = 0x0010
+	TTF_IDISHWND    = 0x0001
+	TTM_ADDTOOLW    = 1074
+)
+
+// TOOLINFO represents a tooltip info structure.
+type TOOLINFO struct {
+	CbSize   uint32
+	UFlags   uint32
+	Hwnd     uintptr
+	UId      uintptr
+	Rect     [4]int32
+	Hinst    uintptr
+	LpszText *uint16
+	LParam   uintptr
+}
+
+// TCITEMW represents a tab item structure.
+type TCITEMW struct {
+	Mask        uint32
+	DwState     uint32
+	DwStateMask uint32
+	PszText     *uint16
+	CchTextMax  int32
+	IImage      int32
+	LParam      uintptr
+}
+
 type WindowProc func(hWnd HWND, msg uint32, wParam uintptr, lParam uintptr) uintptr
 
 // CreateWindowEx creates a window.

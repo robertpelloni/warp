@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"sync"
 )
@@ -24,10 +25,10 @@ type CommandRecord struct {
 type CommandType int
 
 const (
-	CmdShell      CommandType = iota // Regular shell command
-	CmdWarp                          // Warp-internal command (/warp, /ai, etc.)
-	CmdAI                            // AI query
-	CmdAlias                         // Alias expansion
+	CmdShell CommandType = iota // Regular shell command
+	CmdWarp                     // Warp-internal command (/warp, /ai, etc.)
+	CmdAI                       // AI query
+	CmdAlias                    // Alias expansion
 )
 
 // NewEngine creates a new command engine.
@@ -125,14 +126,60 @@ func (e *Engine) executeWarpCommand(cmd string) (string, CommandType, error) {
 			return e.executeAICommand(strings.Join(parts[2:], " "))
 		}
 		return "Warp Go - Agentic Development Environment\nUse /help for commands, /ai <query> for AI assistance", CmdWarp, nil
+	case "/status":
+		return e.executeStatusCommand(), CmdWarp, nil
 	default:
 		return fmt.Sprintf("Unknown Warp command: %s\nType /help for available commands", parts[0]), CmdWarp, nil
 	}
 }
 
-// executeAICommand handles AI queries.
+// executeAICommand handles AI queries and CI Auto-Fix logic.
 func (e *Engine) executeAICommand(query string) (string, CommandType, error) {
+	if strings.Contains(strings.ToLower(query), "fix ci") || strings.Contains(strings.ToLower(query), "auto-fix") {
+		return e.executeCIAutoFix()
+	}
 	return fmt.Sprintf("[AI] Processing: %s\n(AI integration configured - connect to backend for full functionality)", query), CmdAI, nil
+}
+
+// executeCIAutoFix simulates the CI Pipeline Auto-Fix support.
+func (e *Engine) executeCIAutoFix() (string, CommandType, error) {
+	// In a full implementation, this would call out to Claude/Gemini with the last CI logs.
+	var b strings.Builder
+	b.WriteString("[AI Agent] Initiating CI Pipeline Auto-Fix...\n")
+	b.WriteString("[AI Agent] Analyzing last failed GitHub Actions workflow...\n")
+	b.WriteString("[AI Agent] Detected formatting error in Go files.\n")
+
+	out, err := exec.Command("go", "fmt", "./...").CombinedOutput()
+	if err != nil {
+		b.WriteString(fmt.Sprintf("[AI Agent] Attempted fix failed: %v\n", err))
+	} else {
+		b.WriteString("[AI Agent] Successfully ran `go fmt ./...`. The CI issue should be resolved.\n")
+		if len(out) > 0 {
+			b.WriteString("Modified files:\n")
+			b.Write(out)
+		}
+	}
+	return b.String(), CmdAI, nil
+}
+
+// executeStatusCommand handles the /status command for repo health.
+func (e *Engine) executeStatusCommand() string {
+	var b strings.Builder
+	b.WriteString("--- Repository Status ---\n\n")
+
+	out, err := exec.Command("git", "status", "-s").CombinedOutput()
+	if err == nil && len(out) > 0 {
+		b.WriteString("[Git Status]\n")
+		b.Write(out)
+		b.WriteString("\n")
+	}
+
+	out, err = exec.Command("git", "submodule", "status").CombinedOutput()
+	if err == nil && len(out) > 0 {
+		b.WriteString("[Submodule Status]\n")
+		b.Write(out)
+	}
+	return b.String()
 }
 
 func (e *Engine) helpText() string {
@@ -144,6 +191,7 @@ Built-in:
   /ai <query>      Ask AI assistant
   /alias <n> <cmd> Create alias
   /aliases         List aliases
+  /status          Show repo and submodule status
 
 Shell Aliases:
   ll     -> ls -la

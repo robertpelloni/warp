@@ -38,6 +38,7 @@ const (
 	IDC_BLOCKS_LIST  = 102
 	IDC_STATUS_BAR   = 103
 	IDC_PROMPT_LABEL = 104
+	IDC_TAB_CONTROL  = 106
 )
 
 // WarpApp is the main application.
@@ -57,6 +58,8 @@ type WarpApp struct {
 	hOutput     win32.HWND
 	hInput      win32.HWND
 	hBlocks     win32.HWND
+	hTabs       win32.HWND
+	hTooltip    win32.HWND
 	hStatusBar  win32.HWND
 	hPrompt     win32.HWND
 	hFont       win32.HFONT
@@ -71,8 +74,8 @@ type WarpApp struct {
 	surfaceColor uint32
 
 	// State
-	inputHistory []string
-	histIdx      int
+	inputHistory  []string
+	histIdx       int
 	origInputProc uintptr
 }
 
@@ -182,6 +185,15 @@ func (a *WarpApp) Run() {
 
 func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 	// Status bar
+	a.hTabs = win32.CreateWindowEx(0,
+		windows.StringToUTF16Ptr("SysTabControl32"),
+		nil,
+		win32.WS_CHILD|win32.WS_VISIBLE,
+		0, 0, 0, 0,
+		a.hMainWnd, IDC_TAB_CONTROL, hInstance, 0,
+	)
+	win32.SendMessage(a.hTabs, win32.WM_SETFONT, uintptr(a.hFont), 1)
+
 	a.hStatusBar = win32.CreateWindowEx(0,
 		windows.StringToUTF16Ptr("STATIC"),
 		windows.StringToUTF16Ptr("  Ready | Shell: "+a.shell+" | Ctrl+K: Commands | Ctrl+L: Clear | Ctrl+T: New Tab | Ctrl+Shift+T: Theme"),
@@ -230,6 +242,31 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 		a.hMainWnd, IDC_INPUT_EDIT, hInstance, 0,
 	)
 	win32.SendMessage(a.hInput, win32.WM_SETFONT, uintptr(a.hFont), 1)
+
+	// Tooltips
+	a.hTooltip = win32.CreateWindowEx(0,
+		windows.StringToUTF16Ptr(win32.TOOLTIPS_CLASSW),
+		nil,
+		win32.WS_POPUP|win32.WS_EX_TOPMOST,
+		0, 0, 0, 0,
+		a.hMainWnd, 0, hInstance, 0,
+	)
+
+	addTooltip := func(hwnd win32.HWND, text string) {
+		ti := win32.TOOLINFO{
+			CbSize:   uint32(unsafe.Sizeof(win32.TOOLINFO{})),
+			UFlags:   win32.TTF_SUBCLASS | win32.TTF_IDISHWND,
+			Hwnd:     uintptr(a.hMainWnd),
+			UId:      uintptr(hwnd),
+			LpszText: windows.StringToUTF16Ptr(text),
+		}
+		win32.SendMessage(a.hTooltip, win32.TTM_ADDTOOLW, 0, uintptr(unsafe.Pointer(&ti)))
+	}
+
+	addTooltip(a.hPrompt, "Terminal Input Prompt")
+	addTooltip(a.hInput, "Type commands here. Use /help for Warp commands.")
+	addTooltip(a.hBlocks, "Command history and execution blocks.")
+	addTooltip(a.hTabs, "Active terminal sessions.")
 
 	// Subclass the input field to intercept Enter key
 	a.origInputProc = win32.GetWindowLongPtr(a.hInput, win32.GWLP_WNDPROC)
@@ -418,25 +455,44 @@ func (a *WarpApp) layoutControls() {
 	inputH := int32(36)
 	promptW := int32(30)
 	pad := int32(4)
+	tabH := int32(30)
 	blockW := int32(250)
 
+	win32.MoveWindow(a.hTabs, 0, 0, w, tabH, true)
 	win32.MoveWindow(a.hStatusBar, 0, h-statusH, w, statusH, true)
 
 	inputY := h - statusH - inputH
 	win32.MoveWindow(a.hPrompt, pad, inputY+pad, promptW, inputH-pad*2, true)
 	win32.MoveWindow(a.hInput, pad+promptW, inputY, w-pad*2-promptW, inputH, true)
 
-	contentH := inputY
+	contentH := inputY - tabH
+
 	outputW := w - blockW - pad*3
+	editorW := w / 3
+	if w < 1000 {
+		editorW = 0
+	}
+
+	outputW = outputW - editorW
 	if outputW < 200 {
 		outputW = w - pad*2
 		blockW = 0
 	}
 
-	win32.MoveWindow(a.hOutput, pad, pad, outputW, contentH-pad*2, true)
+	win32.MoveWindow(a.hOutput, pad, pad+tabH, outputW, contentH-pad*2, true)
 
 	if blockW > 0 {
-		win32.MoveWindow(a.hBlocks, outputW+pad*2, pad, blockW-pad, contentH-pad*2, true)
+		win32.MoveWindow(a.hBlocks, outputW+pad*2, pad+tabH, blockW-pad, contentH-pad*2, true)
+		win32.ShowWindow(a.hBlocks, win32.SW_SHOW)
+	} else {
+		win32.ShowWindow(a.hBlocks, win32.SW_HIDE)
+	}
+
+	if editorW > 0 {
+		win32.MoveWindow(a.hEditor, outputW+blockW+pad*3, pad+tabH, editorW-pad, contentH-pad*2, true)
+		win32.ShowWindow(a.hEditor, win32.SW_SHOW)
+	} else {
+		win32.ShowWindow(a.hEditor, win32.SW_HIDE)
 	}
 }
 
@@ -606,6 +662,12 @@ func (a *WarpApp) createNewSession() {
 	win32.SetWindowText(a.hOutput, "")
 	a.appendOutput(fmt.Sprintf("Warp Go - %s - Ready\r\n\r\n", name))
 	a.setStatus(fmt.Sprintf("Opened %s | Sessions: %d", name, a.sessMgr.Count()))
+	tcItem := win32.TCITEMW{
+		Mask:    win32.TCIF_TEXT,
+		PszText: windows.StringToUTF16Ptr(name),
+	}
+	win32.SendMessage(a.hTabs, win32.TCM_INSERTITEMW, uintptr(a.sessMgr.Count()-1), uintptr(unsafe.Pointer(&tcItem)))
+
 }
 
 func (a *WarpApp) showCommandPalette() {

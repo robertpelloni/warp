@@ -17,10 +17,10 @@ import (
 type BlockType int
 
 const (
-	BlockCommand  BlockType = iota // A user-typed command
-	BlockOutput                     // Output from a command
-	BlockAI                         // AI/agent response
-	BlockError                      // Error output
+	BlockCommand BlockType = iota // A user-typed command
+	BlockOutput                   // Output from a command
+	BlockAI                       // AI/agent response
+	BlockError                    // Error output
 )
 
 // Block represents a Warp-style command block.
@@ -38,43 +38,43 @@ type Block struct {
 
 // Terminal manages the PTY, ANSI parsing, and command block detection.
 type Terminal struct {
-	mu       sync.RWMutex
-	pty      *pty.PTY
-	running  bool
-	cols     int
-	rows     int
+	mu      sync.RWMutex
+	pty     *pty.PTY
+	running bool
+	cols    int
+	rows    int
 
 	// Command block tracking
-	blocks     []*Block
-	activeBlock *Block
+	blocks       []*Block
+	activeBlock  *Block
 	promptDetect string
 
 	// ANSI parsing state
-	ansiBuf     bytes.Buffer
-	escapeBuf   bytes.Buffer
-	inEscape    bool
+	ansiBuf   bytes.Buffer
+	escapeBuf bytes.Buffer
+	inEscape  bool
 
 	// Callbacks
-	OnUpdate    func()
-	OnNewBlock  func(*Block)
+	OnUpdate   func()
+	OnNewBlock func(*Block)
 
 	// Output collector
-	outputBuf   strings.Builder
-	lineBuf     strings.Builder
+	outputBuf strings.Builder
+	lineBuf   strings.Builder
 
 	// Color state for rendering
-	currentFG   color.Color
-	currentBG   color.Color
-	bold        bool
-	underline   bool
-	italic      bool
+	currentFG color.Color
+	currentBG color.Color
+	bold      bool
+	underline bool
+	italic    bool
 
 	// Shell detection
 	shell string
 
 	// History
-	history     []string
-	histIdx     int
+	history []string
+	histIdx int
 }
 
 // Config for creating a Terminal.
@@ -95,12 +95,12 @@ func New(cfg Config) *Terminal {
 		cfg.Rows = 40
 	}
 	t := &Terminal{
-		cols:      cfg.Cols,
-		rows:      cfg.Rows,
-		shell:     cfg.Shell,
+		cols:         cfg.Cols,
+		rows:         cfg.Rows,
+		shell:        cfg.Shell,
 		promptDetect: "$", // default prompt marker
-		OnUpdate:  cfg.OnUpdate,
-		history:   make([]string, 0),
+		OnUpdate:     cfg.OnUpdate,
+		history:      make([]string, 0),
 	}
 	return t
 }

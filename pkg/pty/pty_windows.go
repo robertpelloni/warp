@@ -13,10 +13,10 @@ import (
 )
 
 type winPTY struct {
-	conPty    uintptr // HPCON
-	inputPipe uintptr // HANDLE - write side
+	conPty     uintptr // HPCON
+	inputPipe  uintptr // HANDLE - write side
 	outputPipe uintptr // HANDLE - read side
-	cmd       *exec.Cmd
+	cmd        *exec.Cmd
 }
 
 func (p *PTY) startWindows(cfg Config) error {
@@ -155,11 +155,11 @@ func (wp *winPTY) Read(buf []byte) (int, error) {
 	var bytesAvail uintptr
 	ret, _, _ := procPeekNamedPipe.Call(
 		wp.outputPipe,
-		0,               // buffer
-		0,               // buffer size
-		0,               // bytes read
+		0,                                    // buffer
+		0,                                    // buffer size
+		0,                                    // bytes read
 		uintptr(unsafe.Pointer(&bytesAvail)), // bytes available
-		0,               // bytes left this message
+		0,                                    // bytes left this message
 	)
 	if ret == 0 || bytesAvail == 0 {
 		return 0, fmt.Errorf("no data available")
@@ -204,8 +204,8 @@ func (wp *winPTY) Close() error {
 	if wp.outputPipe != 0 {
 		procCloseHandle.Call(wp.outputPipe)
 		wp.outputPipe = 0
-	return nil
 	}
+	return nil
 }
 
 func startConPTYProcess(hPC uintptr, cmdline, dir string, env []string) error {
@@ -252,9 +252,9 @@ func startConPTYProcess(hPC uintptr, cmdline, dir string, env []string) error {
 		0, // app name
 		uintptr(unsafe.Pointer(cmdLineUTF16)),
 		0, 0, // security
-		0, // inherit handles
+		0,                     // inherit handles
 		0x00008000|0x00000040, // CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT
-		0, // environment
+		0,                     // environment
 		uintptr(unsafe.Pointer(dirPtr)),
 		uintptr(unsafe.Pointer(&si.StartupInfo)),
 		uintptr(unsafe.Pointer(&pi)),
@@ -313,17 +313,17 @@ type processInformation struct {
 var (
 	modkernel32 = windows.NewLazyDLL("kernel32.dll")
 
-	procCreatePseudoConsole    = modkernel32.NewProc("CreatePseudoConsole")
-	procResizePseudoConsole    = modkernel32.NewProc("ResizePseudoConsole")
-	procClosePseudoConsole     = modkernel32.NewProc("ClosePseudoConsole")
-	procCreateProcessW         = modkernel32.NewProc("CreateProcessW")
-	procCreatePipe             = modkernel32.NewProc("CreatePipe")
-	procWriteFile              = modkernel32.NewProc("WriteFile")
-	procReadFile               = modkernel32.NewProc("ReadFile")
-	procCloseHandle            = modkernel32.NewProc("CloseHandle")
+	procCreatePseudoConsole               = modkernel32.NewProc("CreatePseudoConsole")
+	procResizePseudoConsole               = modkernel32.NewProc("ResizePseudoConsole")
+	procClosePseudoConsole                = modkernel32.NewProc("ClosePseudoConsole")
+	procCreateProcessW                    = modkernel32.NewProc("CreateProcessW")
+	procCreatePipe                        = modkernel32.NewProc("CreatePipe")
+	procWriteFile                         = modkernel32.NewProc("WriteFile")
+	procReadFile                          = modkernel32.NewProc("ReadFile")
+	procCloseHandle                       = modkernel32.NewProc("CloseHandle")
 	procInitializeProcThreadAttributeList = modkernel32.NewProc("InitializeProcThreadAttributeList")
-	procUpdateProcThreadAttribute          = modkernel32.NewProc("UpdateProcThreadAttribute")
-	procDeleteProcThreadAttributeList      = modkernel32.NewProc("DeleteProcThreadAttributeList")
+	procUpdateProcThreadAttribute         = modkernel32.NewProc("UpdateProcThreadAttribute")
+	procDeleteProcThreadAttributeList     = modkernel32.NewProc("DeleteProcThreadAttributeList")
 	procPeekNamedPipe                     = modkernel32.NewProc("PeekNamedPipe")
 )
 

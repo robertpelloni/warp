@@ -38,7 +38,7 @@ func TestExpand(t *testing.T) {
 		{"ll", "ls -la"},
 		{"gs", "git status"},
 		{"gd", "git diff"},
-		{"ls -la", "ls -la"},       // not an alias, pass through
+		{"ls -la", "ls -la"}, // not an alias, pass through
 		{"echo hello", "echo hello"},
 	}
 
