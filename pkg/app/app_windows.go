@@ -16,6 +16,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
+	"github.com/robertpelloni/warp/pkg/agent"
 	"github.com/robertpelloni/warp/pkg/command"
 	"github.com/robertpelloni/warp/pkg/editor"
 	"github.com/robertpelloni/warp/pkg/session"
@@ -45,13 +46,14 @@ const (
 type WarpApp struct {
 	mu sync.Mutex
 
-	sessMgr    *session.Manager
-	cmdEngine  *command.Engine
-	editEngine *editor.Editor
-	warpTheme  *theme.WarpTheme
-	ctx        context.Context
-	cancel     context.CancelFunc
-	shell      string
+	sessMgr      *session.Manager
+	cmdEngine    *command.Engine
+	editEngine   *editor.Editor
+	warpTheme    *theme.WarpTheme
+	orchestrator *agent.Orchestrator
+	ctx          context.Context
+	cancel       context.CancelFunc
+	shell        string
 
 	// Win32 window handles
 	hMainWnd    win32.HWND
@@ -109,6 +111,22 @@ func New(cfg Config) *WarpApp {
 		a.warpTheme = theme.DefaultTheme()
 	}
 	a.updateColors()
+
+	// Agent Orchestration
+	cwd, _ := os.Getwd()
+	if orch, err := agent.NewOrchestrator(cwd); err == nil {
+		a.orchestrator = orch
+		go func() {
+			_ = a.orchestrator.ConnectRemote()
+			a.mu.Lock()
+			defer a.mu.Unlock()
+			a.outputBuf += fmt.Sprintf("\r\n[Agent Orchestrator] Status: %s\r\n", a.orchestrator.Status())
+			if a.hMainWnd != 0 {
+				win32.PostMessage(a.hMainWnd, win32.WM_USER+2, 0, 0)
+			}
+		}()
+	}
+
 	return a
 }
 

@@ -1,2 +1,3 @@
 app/tests/ref
 *.svg
+.pi/
