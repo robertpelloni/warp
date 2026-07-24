@@ -7,33 +7,33 @@ import (
 
 func TestParseANSI(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      string
-		wantText   string
+		name     string
+		input    string
+		wantText string
 		wantColors int
 	}{
 		{
-			name:       "plain text",
-			input:      "hello world",
-			wantText:   "hello world",
+			name:     "plain text",
+			input:    "hello world",
+			wantText: "hello world",
 			wantColors: 0,
 		},
 		{
-			name:       "red text",
-			input:      "\x1b[31mred text\x1b[0m",
-			wantText:   "red text",
+			name:     "red text",
+			input:    "\x1b[31mred text\x1b[0m",
+			wantText: "red text",
 			wantColors: 2, // red + reset
 		},
 		{
-			name:       "bold text",
-			input:      "\x1b[1mbold\x1b[0m",
-			wantText:   "bold",
+			name:     "bold text",
+			input:    "\x1b[1mbold\x1b[0m",
+			wantText: "bold",
 			wantColors: 2,
 		},
 		{
-			name:       "mixed colors",
-			input:      "\x1b[32mgreen\x1b[0m normal \x1b[34mblue\x1b[0m",
-			wantText:   "green normal blue",
+			name:     "mixed colors",
+			input:    "\x1b[32mgreen\x1b[0m normal \x1b[34mblue\x1b[0m",
+			wantText: "green normal blue",
 			wantColors: 4,
 		},
 	}
@@ -129,18 +129,18 @@ func TestIsPrompt(t *testing.T) {
 
 func TestParseANSIColors(t *testing.T) {
 	tests := []struct {
-		params    string
-		final     byte
-		wantNil   bool
-		wantBold  bool
+		params   string
+		final    byte
+		wantNil  bool
+		wantBold bool
 		wantReset bool
 	}{
-		{"", 'm', false, false, true},     // empty params with 'm' = reset
-		{"1", 'm', false, true, false},    // bold
-		{"0", 'm', false, false, true},    // reset
-		{"31", 'm', false, false, false},  // red fg
+		{"", 'm', false, false, true},  // empty params with 'm' = reset
+		{"1", 'm', false, true, false}, // bold
+		{"0", 'm', false, false, true}, // reset
+		{"31", 'm', false, false, false}, // red fg
 		{"1;31", 'm', false, true, false}, // bold red
-		{"x", 'A', true, false, false},    // not 'm' final
+		{"x", 'A', true, false, false},  // not 'm' final
 	}
 
 	for _, tt := range tests {

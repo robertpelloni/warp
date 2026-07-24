@@ -58,6 +58,3 @@ __pycache__/
 
 # Agent Cache
 .pi/
-warp-go
-warp-go.exe
-.vscode/

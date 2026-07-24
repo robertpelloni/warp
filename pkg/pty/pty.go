@@ -24,13 +24,6 @@ type PTY struct {
 	platform interface{}
 }
 
-type platformPTY interface {
-	Write(data []byte) (int, error)
-	Read(buf []byte) (int, error)
-	Resize(cols, rows uint16) error
-	Close() error
-}
-
 // Config for creating a PTY.
 type Config struct {
 	Shell string
@@ -76,7 +69,7 @@ func (p *PTY) Write(data []byte) (int, error) {
 	if p.stdin != nil {
 		return p.stdin.Write(data)
 	}
-	if wp, ok := p.platform.(platformPTY); ok {
+	if wp, ok := p.platform.(*winPTY); ok {
 		return wp.Write(data)
 	}
 	return 0, fmt.Errorf("pty: no input available")
@@ -87,7 +80,7 @@ func (p *PTY) Read(buf []byte) (int, error) {
 	if p.stdout != nil {
 		return p.stdout.Read(buf)
 	}
-	if wp, ok := p.platform.(platformPTY); ok {
+	if wp, ok := p.platform.(*winPTY); ok {
 		return wp.Read(buf)
 	}
 	return 0, io.EOF
@@ -99,7 +92,7 @@ func (p *PTY) Resize(cols, rows uint16) error {
 	defer p.mu.Unlock()
 	p.wsCol = cols
 	p.wsRow = rows
-	if wp, ok := p.platform.(platformPTY); ok {
+	if wp, ok := p.platform.(*winPTY); ok {
 		return wp.Resize(cols, rows)
 	}
 	return nil
@@ -117,8 +110,8 @@ func (p *PTY) Close() error {
 		p.cmd.Process.Kill()
 		p.cmd.Wait()
 	}
-	if wp, ok := p.platform.(platformPTY); ok {
-		return wp.Close()
+	if wp, ok := p.platform.(*winPTY); ok {
+		wp.Close()
 	}
 	return nil
 }

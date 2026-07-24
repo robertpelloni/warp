@@ -1,17 +1,8 @@
 package session
 
 import (
-	"os/exec"
-	"runtime"
 	"testing"
 )
-
-func getTestShell() string {
-	if runtime.GOOS == "windows" {
-		return "cmd.exe"
-	}
-	return "sh"
-}
 
 func TestNewManager(t *testing.T) {
 	m := NewManager()
@@ -25,11 +16,7 @@ func TestNewManager(t *testing.T) {
 
 func TestCreateSession(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	if _, err := exec.LookPath(shell); err != nil {
-		t.Skipf("%s not found in PATH", shell)
-	}
-	sess, err := m.Create("Test", shell, 80, 24, nil)
+	sess, err := m.Create("Test", "cmd.exe", 80, 24, nil)
 	if err != nil {
 		t.Fatalf("Create() error: %v", err)
 	}
@@ -49,9 +36,8 @@ func TestCreateSession(t *testing.T) {
 
 func TestActiveSession(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	m.Create("First", shell, 80, 24, nil)
-	m.Create("Second", shell, 80, 24, nil)
+	m.Create("First", "cmd.exe", 80, 24, nil)
+	m.Create("Second", "cmd.exe", 80, 24, nil)
 
 	active := m.Active()
 	if active == nil {
@@ -64,9 +50,8 @@ func TestActiveSession(t *testing.T) {
 
 func TestSetActive(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	sess1, _ := m.Create("First", shell, 80, 24, nil)
-	m.Create("Second", shell, 80, 24, nil)
+	sess1, _ := m.Create("First", "cmd.exe", 80, 24, nil)
+	m.Create("Second", "cmd.exe", 80, 24, nil)
 
 	m.SetActive(sess1.ID)
 	active := m.Active()
@@ -77,8 +62,7 @@ func TestSetActive(t *testing.T) {
 
 func TestRemoveSession(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	sess, _ := m.Create("Test", shell, 80, 24, nil)
+	sess, _ := m.Create("Test", "cmd.exe", 80, 24, nil)
 	m.Remove(sess.ID)
 	if m.Count() != 0 {
 		t.Errorf("Count() after Remove = %d, want 0", m.Count())
@@ -87,9 +71,8 @@ func TestRemoveSession(t *testing.T) {
 
 func TestListSessions(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	m.Create("A", shell, 80, 24, nil)
-	m.Create("B", shell, 80, 24, nil)
+	m.Create("A", "cmd.exe", 80, 24, nil)
+	m.Create("B", "cmd.exe", 80, 24, nil)
 
 	list := m.List()
 	if len(list) != 2 {
@@ -99,8 +82,7 @@ func TestListSessions(t *testing.T) {
 
 func TestCreateDefaultName(t *testing.T) {
 	m := NewManager()
-	shell := getTestShell()
-	sess, err := m.Create("", shell, 80, 24, nil)
+	sess, err := m.Create("", "cmd.exe", 80, 24, nil)
 	if err != nil {
 		t.Fatalf("Create() error: %v", err)
 	}
