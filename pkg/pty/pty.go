@@ -9,6 +9,14 @@ import (
 	"sync"
 )
 
+// platformPTY abstracts platform-specific PTY implementations (like ConPTY on Windows).
+type platformPTY interface {
+	Write(data []byte) (int, error)
+	Read(buf []byte) (int, error)
+	Resize(cols, rows uint16) error
+	Close() error
+}
+
 // PTY wraps a pseudo-terminal with cross-platform support.
 // On Windows it uses ConPTY; on Unix it uses a piped subprocess.
 type PTY struct {
@@ -21,7 +29,7 @@ type PTY struct {
 	wsRow   uint16
 
 	// Platform-specific
-	platform interface{}
+	platform platformPTY
 }
 
 // Config for creating a PTY.
@@ -69,8 +77,8 @@ func (p *PTY) Write(data []byte) (int, error) {
 	if p.stdin != nil {
 		return p.stdin.Write(data)
 	}
-	if wp, ok := p.platform.(*winPTY); ok {
-		return wp.Write(data)
+	if p.platform != nil {
+		return p.platform.Write(data)
 	}
 	return 0, fmt.Errorf("pty: no input available")
 }
@@ -80,8 +88,8 @@ func (p *PTY) Read(buf []byte) (int, error) {
 	if p.stdout != nil {
 		return p.stdout.Read(buf)
 	}
-	if wp, ok := p.platform.(*winPTY); ok {
-		return wp.Read(buf)
+	if p.platform != nil {
+		return p.platform.Read(buf)
 	}
 	return 0, io.EOF
 }
@@ -92,8 +100,8 @@ func (p *PTY) Resize(cols, rows uint16) error {
 	defer p.mu.Unlock()
 	p.wsCol = cols
 	p.wsRow = rows
-	if wp, ok := p.platform.(*winPTY); ok {
-		return wp.Resize(cols, rows)
+	if p.platform != nil {
+		return p.platform.Resize(cols, rows)
 	}
 	return nil
 }
@@ -110,8 +118,8 @@ func (p *PTY) Close() error {
 		p.cmd.Process.Kill()
 		p.cmd.Wait()
 	}
-	if wp, ok := p.platform.(*winPTY); ok {
-		wp.Close()
+	if p.platform != nil {
+		p.platform.Close()
 	}
 	return nil
 }

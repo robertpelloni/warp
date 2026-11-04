@@ -38,7 +38,7 @@ func TestExpand(t *testing.T) {
 		{"ll", "ls -la"},
 		{"gs", "git status"},
 		{"gd", "git diff"},
-		{"ls -la", "ls -la"},       // not an alias, pass through
+		{"ls -la", "ls -la"}, // not an alias, pass through
 		{"echo hello", "echo hello"},
 	}
 
@@ -126,5 +126,16 @@ func TestHistory(t *testing.T) {
 	history := e.History()
 	if len(history) != 2 {
 		t.Errorf("History() len = %d, want 2", len(history))
+	}
+}
+
+func TestCmdEditor(t *testing.T) {
+	e := NewEngine()
+	if cType := e.Classify("/edit main.go"); cType != CmdEditor {
+		t.Errorf("expected CmdEditor, got %v", cType)
+	}
+	out, cType, err := e.Execute("/edit main.go")
+	if err != nil || cType != CmdEditor {
+		t.Errorf("execute /edit failed: out=%s, err=%v", out, err)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -38,6 +39,16 @@ const (
 	IDC_BLOCKS_LIST  = 102
 	IDC_STATUS_BAR   = 103
 	IDC_PROMPT_LABEL = 104
+	IDC_EDITOR_EDIT  = 105
+
+	// Tray identifier and custom message
+	WM_APP_TRAYMSG = 0x8000 + 100
+	ID_TRAY_ICON   = 1001
+
+	// Tray Menu Command IDs
+	ID_TRAY_SHOW = 2001
+	ID_TRAY_HIDE = 2002
+	ID_TRAY_QUIT = 2003
 )
 
 // WarpApp is the main application.
@@ -57,11 +68,15 @@ type WarpApp struct {
 	hOutput     win32.HWND
 	hInput      win32.HWND
 	hBlocks     win32.HWND
+	hEditor     win32.HWND
 	hStatusBar  win32.HWND
 	hPrompt     win32.HWND
 	hFont       win32.HFONT
 	hBoldFont   win32.HFONT
 	hPromptFont win32.HFONT
+
+	// System Tray
+	trayData win32.NOTIFYICONDATAW
 
 	// Colors (Win32 COLORREF)
 	bgColor      uint32
@@ -71,8 +86,8 @@ type WarpApp struct {
 	surfaceColor uint32
 
 	// State
-	inputHistory []string
-	histIdx      int
+	inputHistory  []string
+	histIdx       int
 	origInputProc uintptr
 }
 
@@ -117,7 +132,7 @@ func (a *WarpApp) updateColors() {
 	a.surfaceColor = a.warpTheme.COLORREF(theme.ColorSurface)
 }
 
-// Run creates windows and runs the message loop.
+// Run creates windows, initializes the tray, and runs the message loop.
 func (a *WarpApp) Run() {
 	hInstance := win32.GetModuleHandle()
 	className := "WarpGoMainWnd"
@@ -143,7 +158,7 @@ func (a *WarpApp) Run() {
 	win32.RegisterClassEx(&wc)
 
 	// Create main window
-	titlePtr := windows.StringToUTF16Ptr("Warp Go - Agentic Development Environment")
+	titlePtr := windows.StringToUTF16Ptr("Warp Go - Unified Agentic Development Dashboard")
 	a.hMainWnd = win32.CreateWindowEx(
 		win32.WS_EX_APPWINDOW,
 		classNamePtr,
@@ -159,6 +174,7 @@ func (a *WarpApp) Run() {
 	a.hPromptFont = a.createMonoFont(20, win32.FW_BOLD)
 
 	a.createControls(hInstance)
+	a.initTrayIcon(hInstance)
 	a.initTerminal()
 
 	win32.ShowWindow(a.hMainWnd, win32.SW_SHOWDEFAULT)
@@ -180,18 +196,57 @@ func (a *WarpApp) Run() {
 	a.Quit()
 }
 
+func (a *WarpApp) initTrayIcon(hInstance win32.HINSTANCE) {
+	hIcon := win32.LoadStandardIcon(win32.IDI_APPLICATION)
+	a.trayData = win32.NOTIFYICONDATAW{
+		CbSize:           uint32(unsafe.Sizeof(win32.NOTIFYICONDATAW{})),
+		HWnd:             a.hMainWnd,
+		UID:              ID_TRAY_ICON,
+		UFlags:           win32.NIF_MESSAGE | win32.NIF_ICON | win32.NIF_TIP,
+		UCallbackMessage: WM_APP_TRAYMSG,
+		HIcon:            hIcon,
+	}
+	tip := "Warp Go - Unified Agentic Dashboard"
+	tipUTF16 := windows.StringToUTF16(tip)
+	copy(a.trayData.SzTip[:], tipUTF16)
+
+	win32.ShellNotifyIcon(win32.NIM_ADD, &a.trayData)
+}
+
+func (a *WarpApp) removeTrayIcon() {
+	if a.trayData.HWnd != 0 {
+		win32.ShellNotifyIcon(win32.NIM_DELETE, &a.trayData)
+		a.trayData.HWnd = 0
+	}
+}
+
+func (a *WarpApp) showTrayMenu() {
+	var pt win32.POINT
+	win32.GetCursorPos(&pt)
+
+	hMenu := win32.CreatePopupMenu()
+	win32.AppendMenu(hMenu, win32.MF_STRING, ID_TRAY_SHOW, "Show Dashboard")
+	win32.AppendMenu(hMenu, win32.MF_STRING, ID_TRAY_HIDE, "Minimize to Tray")
+	win32.AppendMenu(hMenu, win32.MF_SEPARATOR, 0, "")
+	win32.AppendMenu(hMenu, win32.MF_STRING, ID_TRAY_QUIT, "Quit Warp Servers & App")
+
+	win32.SetForegroundWindow(a.hMainWnd)
+	win32.TrackPopupMenu(hMenu, win32.TPM_RIGHTBUTTON|win32.TPM_BOTTOMALIGN, pt.X, pt.Y, a.hMainWnd)
+	win32.DestroyMenu(hMenu)
+}
+
 func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
-	// Status bar
+	// Status bar with detailed tooltips/hints
 	a.hStatusBar = win32.CreateWindowEx(0,
 		windows.StringToUTF16Ptr("STATIC"),
-		windows.StringToUTF16Ptr("  Ready | Shell: "+a.shell+" | Ctrl+K: Commands | Ctrl+L: Clear | Ctrl+T: New Tab | Ctrl+Shift+T: Theme"),
+		windows.StringToUTF16Ptr("  Ready | Shell: "+a.shell+" | Ctrl+K: Palette | Ctrl+L: Clear | Ctrl+T: New Tab | Ctrl+Shift+T: Theme | /edit <file>: IDE Pane"),
 		win32.WS_CHILD|win32.WS_VISIBLE,
 		0, 0, 0, 0,
 		a.hMainWnd, IDC_STATUS_BAR, hInstance, 0,
 	)
 	win32.SendMessage(a.hStatusBar, win32.WM_SETFONT, uintptr(a.hFont), 1)
 
-	// Blocks sidebar
+	// Command blocks sidebar
 	a.hBlocks = win32.CreateWindowEx(win32.WS_EX_CLIENTEDGE,
 		windows.StringToUTF16Ptr("EDIT"),
 		nil,
@@ -201,7 +256,7 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 	)
 	win32.SendMessage(a.hBlocks, win32.WM_SETFONT, uintptr(a.hFont), 1)
 
-	// Output area
+	// Output area (Terminal)
 	a.hOutput = win32.CreateWindowEx(win32.WS_EX_CLIENTEDGE,
 		windows.StringToUTF16Ptr("EDIT"),
 		nil,
@@ -210,6 +265,16 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 		a.hMainWnd, IDC_OUTPUT_EDIT, hInstance, 0,
 	)
 	win32.SendMessage(a.hOutput, win32.WM_SETFONT, uintptr(a.hFont), 1)
+
+	// Editor area (Unified Dashboard IDE Pane)
+	a.hEditor = win32.CreateWindowEx(win32.WS_EX_CLIENTEDGE,
+		windows.StringToUTF16Ptr("EDIT"),
+		windows.StringToUTF16Ptr("// Warp IDE Editor Pane\r\n// Open files using `/edit <filepath>`\r\n"),
+		win32.WS_CHILD|win32.WS_VISIBLE|win32.ES_MULTILINE|win32.ES_AUTOVSCROLL|win32.WS_VSCROLL,
+		0, 0, 0, 0,
+		a.hMainWnd, IDC_EDITOR_EDIT, hInstance, 0,
+	)
+	win32.SendMessage(a.hEditor, win32.WM_SETFONT, uintptr(a.hFont), 1)
 
 	// Prompt label
 	a.hPrompt = win32.CreateWindowEx(0,
@@ -231,7 +296,7 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 	)
 	win32.SendMessage(a.hInput, win32.WM_SETFONT, uintptr(a.hFont), 1)
 
-	// Subclass the input field to intercept Enter key
+	// Subclass the input field to intercept keyboard events
 	a.origInputProc = win32.GetWindowLongPtr(a.hInput, win32.GWLP_WNDPROC)
 	inputCallback := syscall.NewCallback(func(hWnd uintptr, msg uint32, wParam uintptr, lParam uintptr) uintptr {
 		if msg == win32.WM_KEYDOWN && wParam == win32.VK_RETURN {
@@ -287,24 +352,25 @@ func (a *WarpApp) initTerminal() {
 }
 
 func (a *WarpApp) welcomeMessage() string {
-	return "Warp Go - Agentic Development Environment\r\n" +
-		"Port of warp-dev/warp from Rust to Go\r\n\r\n" +
+	return "Warp Go - Unified Agentic Development Dashboard\r\n" +
+		"Single-Dashboard Architecture with IDE Editor, Command Blocks, and Real PTY\r\n\r\n" +
 		"Features:\r\n" +
 		"  - Real PTY with ConPTY support\r\n" +
 		"  - Command blocks (Warp-style output grouping)\r\n" +
-		"  - Multiple sessions and tabs\r\n" +
+		"  - Unified IDE Editor pane (/edit <file>)\r\n" +
+		"  - System tray icon with background server control\r\n" +
 		"  - AI integration (/ai <query>)\r\n" +
 		"  - Command palette (Ctrl+K)\r\n" +
 		"  - 7 built-in themes (Ctrl+Shift+T)\r\n" +
 		"  - Shell aliases and auto-complete\r\n\r\n" +
 		"Keyboard Shortcuts:\r\n" +
-		"  Ctrl+Enter    Execute command\r\n" +
-		"  Ctrl+L        Clear output\r\n" +
-		"  Ctrl+K        Command palette\r\n" +
-		"  Ctrl+T        New session\r\n" +
-		"  Ctrl+Shift+T  Cycle theme\r\n" +
-		"  Ctrl+Up/Down  Command history\r\n\r\n" +
-		"Type /help for Warp commands, or any shell command below.\r\n\r\n"
+		"  Enter          Execute command\r\n" +
+		"  Ctrl+L         Clear output\r\n" +
+		"  Ctrl+K         Command palette\r\n" +
+		"  Ctrl+T         New session\r\n" +
+		"  Ctrl+Shift+T   Cycle theme\r\n" +
+		"  Ctrl+Up/Down   Command history\r\n\r\n" +
+		"Type /help for Warp commands, /edit <path> to open a file, or any shell command.\r\n\r\n"
 }
 
 // -- Main Window Procedure --
@@ -341,7 +407,7 @@ func (a *WarpApp) mainWndProc(hWnd win32.HWND, msg uint32, wParam uintptr, lPara
 			win32.SetBkColor(hdc, a.bgColor)
 			win32.SetTextColor(hdc, a.promptColor)
 			return uintptr(win32.CreateSolidBrush(a.bgColor))
-		case a.hBlocks:
+		case a.hBlocks, a.hEditor:
 			win32.SetBkColor(hdc, a.surfaceColor)
 			win32.SetTextColor(hdc, a.textColor)
 			return uintptr(win32.CreateSolidBrush(a.surfaceColor))
@@ -350,6 +416,31 @@ func (a *WarpApp) mainWndProc(hWnd win32.HWND, msg uint32, wParam uintptr, lPara
 			win32.SetTextColor(hdc, a.textColor)
 			return uintptr(win32.CreateSolidBrush(a.bgColor))
 		}
+
+	case win32.WM_COMMAND:
+		switch wParam {
+		case ID_TRAY_SHOW:
+			win32.ShowWindow(a.hMainWnd, win32.SW_RESTORE)
+			win32.SetForegroundWindow(a.hMainWnd)
+			return 0
+		case ID_TRAY_HIDE:
+			win32.ShowWindow(a.hMainWnd, win32.SW_HIDE)
+			return 0
+		case ID_TRAY_QUIT:
+			a.Quit()
+			win32.PostQuitMessage(0)
+			return 0
+		}
+
+	case WM_APP_TRAYMSG:
+		switch lParam {
+		case win32.WM_RBUTTONUP:
+			a.showTrayMenu()
+		case win32.WM_LBUTTONDBLCLK:
+			win32.ShowWindow(a.hMainWnd, win32.SW_RESTORE)
+			win32.SetForegroundWindow(a.hMainWnd)
+		}
+		return 0
 
 	case win32.WM_KEYDOWN:
 		vk := wParam
@@ -400,6 +491,7 @@ func (a *WarpApp) mainWndProc(hWnd win32.HWND, msg uint32, wParam uintptr, lPara
 
 	case win32.WM_DESTROY:
 		win32.KillTimer(hWnd, 1)
+		a.removeTrayIcon()
 		win32.PostQuitMessage(0)
 		return 0
 	}
@@ -407,7 +499,7 @@ func (a *WarpApp) mainWndProc(hWnd win32.HWND, msg uint32, wParam uintptr, lPara
 	return win32.DefWindowProc(hWnd, msg, wParam, lParam)
 }
 
-// -- Layout --
+// -- Layout: Unified Single-Dashboard Layout --
 
 func (a *WarpApp) layoutControls() {
 	rc := win32.GetClientRect(a.hMainWnd)
@@ -418,7 +510,7 @@ func (a *WarpApp) layoutControls() {
 	inputH := int32(36)
 	promptW := int32(30)
 	pad := int32(4)
-	blockW := int32(250)
+	blockW := int32(230)
 
 	win32.MoveWindow(a.hStatusBar, 0, h-statusH, w, statusH, true)
 
@@ -426,21 +518,31 @@ func (a *WarpApp) layoutControls() {
 	win32.MoveWindow(a.hPrompt, pad, inputY+pad, promptW, inputH-pad*2, true)
 	win32.MoveWindow(a.hInput, pad+promptW, inputY, w-pad*2-promptW, inputH, true)
 
-	contentH := inputY
-	outputW := w - blockW - pad*3
-	if outputW < 200 {
-		outputW = w - pad*2
+	contentH := inputY - pad
+
+	// Dashboard division:
+	// Left: Terminal Output (50% of main area)
+	// Center: Editor pane (50% of main area)
+	// Right: Command Blocks sidebar (blockW)
+	remainingW := w - blockW - pad*4
+	if remainingW < 400 {
+		// Responsive collapse if viewport is narrow
 		blockW = 0
+		remainingW = w - pad*2
 	}
 
-	win32.MoveWindow(a.hOutput, pad, pad, outputW, contentH-pad*2, true)
+	terminalW := remainingW / 2
+	editorW := remainingW - terminalW
+
+	win32.MoveWindow(a.hOutput, pad, pad, terminalW, contentH, true)
+	win32.MoveWindow(a.hEditor, pad*2+terminalW, pad, editorW, contentH, true)
 
 	if blockW > 0 {
-		win32.MoveWindow(a.hBlocks, outputW+pad*2, pad, blockW-pad, contentH-pad*2, true)
+		win32.MoveWindow(a.hBlocks, pad*3+terminalW+editorW, pad, blockW, contentH, true)
 	}
 }
 
-// -- Terminal Operations --
+// -- Terminal & Editor Operations --
 
 func (a *WarpApp) executeInput() {
 	text := win32.GetWindowText(a.hInput)
@@ -467,6 +569,11 @@ func (a *WarpApp) executeCommand(cmd string) {
 		} else {
 			a.appendOutput(fmt.Sprintf("\r\n%s\r\n", result))
 		}
+	case command.CmdEditor:
+		parts := strings.Fields(expanded)
+		if len(parts) >= 2 {
+			a.openEditor(parts[1])
+		}
 	case command.CmdAlias:
 		a.appendOutput(fmt.Sprintf("\r\n> %s -> %s\r\n", cmd, expanded))
 		a.sendToTerminal(expanded)
@@ -477,6 +584,22 @@ func (a *WarpApp) executeCommand(cmd string) {
 
 	a.updateBlocksView()
 	a.setStatus(fmt.Sprintf("Executed: %s | %s", cmd, time.Now().Format("15:04:05")))
+}
+
+func (a *WarpApp) openEditor(filePath string) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		a.appendOutput(fmt.Sprintf("\r\n[Editor] Failed to open %s: %v\r\n", filePath, err))
+		return
+	}
+	buf := a.editEngine.Open(filePath)
+	buf.Content = string(content)
+	buf.Language = editor.DetectLanguage(filePath)
+
+	editorText := fmt.Sprintf("// File: %s (%s, %d lines)\r\n%s",
+		filepath.Base(filePath), buf.Language, buf.LineCount(), strings.ReplaceAll(strings.ReplaceAll(string(content), "\r\n", "\n"), "\n", "\r\n"))
+	win32.SetWindowText(a.hEditor, editorText)
+	a.appendOutput(fmt.Sprintf("\r\n[Editor] Loaded %s into dashboard editor\r\n", filePath))
 }
 
 func (a *WarpApp) sendToTerminal(cmd string) {
@@ -613,6 +736,7 @@ func (a *WarpApp) showCommandPalette() {
 	entries = append(entries,
 		"/help - Show Warp commands",
 		"/ai <query> - Ask AI assistant",
+		"/edit <file> - Open file in Editor",
 		"/aliases - List aliases",
 		"New Tab (Ctrl+T)",
 		"Clear Output (Ctrl+L)",
@@ -667,11 +791,14 @@ func (a *WarpApp) createMonoFont(size int32, weight int32) win32.HFONT {
 	)
 }
 
-// Quit shuts down the application.
+// Quit shuts down the application and background servers.
 func (a *WarpApp) Quit() {
+	a.removeTrayIcon()
 	a.cancel()
 	for _, s := range a.sessMgr.List() {
-		s.Terminal.Stop()
+		if s.Terminal != nil {
+			s.Terminal.Stop()
+		}
 	}
 	a.editEngine.Close()
 }
