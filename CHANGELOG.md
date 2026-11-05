@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.2] - 2026-06-14
+
+### Added
+- **Syntax Highlighting Lexer (`Tokenize`)**: Added multi-language lexical analysis in `pkg/editor/lexer.go` supporting Go, Rust, and Python.
+- **Language Token Categorization**: Classifies tokens into keywords, strings, comments, numbers, operators, and identifiers with character offset tracking.
+- **Lexer Test Suite**: Added comprehensive test coverage in `pkg/editor/lexer_test.go`.
+
 ## [v0.2.1] - 2026-06-14
 
 ### Added

@@ -19,3 +19,7 @@
 ## Release v0.2.1 Updates:
 - Integrated `SaveToFile` in `pkg/editor` and wired `Ctrl+S` in `pkg/app/app_windows.go` for instant file persistence from the dashboard editor pane.
 - Presubmit checks and all unit tests verified.
+
+## Release v0.2.2 Updates:
+- Added `Tokenize` syntax analysis engine in `pkg/editor/lexer.go` supporting Go, Rust, and Python keywords, comments, strings, and operators.
+- Validated with unit tests in `pkg/editor/lexer_test.go`.
