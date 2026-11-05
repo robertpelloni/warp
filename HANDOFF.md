@@ -15,3 +15,7 @@
 - Run `./script/presubmit` to verify build and test health.
 - All documentation files are tracked at root (`VERSION.md`, `VISION.md`, `MEMORY.md`, `DEPLOY.md`, `IDEAS.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, `HANDOFF.md`, `LLM_INSTRUCTIONS.md`).
 - For any new features, keep the unified single-page dashboard principle intact.
+
+## Release v0.2.1 Updates:
+- Integrated `SaveToFile` in `pkg/editor` and wired `Ctrl+S` in `pkg/app/app_windows.go` for instant file persistence from the dashboard editor pane.
+- Presubmit checks and all unit tests verified.

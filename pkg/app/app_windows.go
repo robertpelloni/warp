@@ -86,9 +86,10 @@ type WarpApp struct {
 	surfaceColor uint32
 
 	// State
-	inputHistory  []string
-	histIdx       int
-	origInputProc uintptr
+	inputHistory   []string
+	histIdx        int
+	origInputProc  uintptr
+	origEditorProc uintptr
 }
 
 // Config for the application.
@@ -275,6 +276,19 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 		a.hMainWnd, IDC_EDITOR_EDIT, hInstance, 0,
 	)
 	win32.SendMessage(a.hEditor, win32.WM_SETFONT, uintptr(a.hFont), 1)
+	// Subclass editor pane to intercept Ctrl+S
+	a.origEditorProc = win32.GetWindowLongPtr(a.hEditor, win32.GWLP_WNDPROC)
+	editorCallback := syscall.NewCallback(func(hWnd uintptr, msg uint32, wParam uintptr, lParam uintptr) uintptr {
+		if msg == win32.WM_KEYDOWN {
+			ctrl := win32.IsKeyDown(win32.VK_CONTROL)
+			if ctrl && wParam == 'S' {
+				a.saveActiveEditorBuffer()
+				return 0
+			}
+		}
+		return win32.CallWindowProc(a.origEditorProc, win32.HWND(hWnd), msg, wParam, lParam)
+	})
+	win32.SetWindowLongPtr(a.hEditor, win32.GWLP_WNDPROC, editorCallback)
 
 	// Prompt label
 	a.hPrompt = win32.CreateWindowEx(0,
@@ -584,6 +598,35 @@ func (a *WarpApp) executeCommand(cmd string) {
 
 	a.updateBlocksView()
 	a.setStatus(fmt.Sprintf("Executed: %s | %s", cmd, time.Now().Format("15:04:05")))
+}
+
+func (a *WarpApp) saveActiveEditorBuffer() {
+	buf := a.editEngine.Active()
+	if buf == nil || buf.Path == "" {
+		a.setStatus("No active file in editor to save")
+		return
+	}
+	text := win32.GetWindowText(a.hEditor)
+	// Strip header if present
+	lines := strings.Split(text, "\r\n")
+	var contentLines []string
+	headerSkipped := false
+	for _, line := range lines {
+		if !headerSkipped && strings.HasPrefix(line, "// File: ") {
+			headerSkipped = true
+			continue
+		}
+		contentLines = append(contentLines, line)
+	}
+	actualContent := strings.Join(contentLines, "\n")
+	a.editEngine.SetContent(buf.Path, actualContent)
+	if err := a.editEngine.SaveToFile(buf.Path); err != nil {
+		a.appendOutput(fmt.Sprintf("\r\n[Editor] Failed to save %s: %v\r\n", buf.Path, err))
+		a.setStatus(fmt.Sprintf("Save failed: %v", err))
+		return
+	}
+	a.appendOutput(fmt.Sprintf("\r\n[Editor] Successfully saved %s\r\n", buf.Path))
+	a.setStatus(fmt.Sprintf("Saved: %s at %s", filepath.Base(buf.Path), time.Now().Format("15:04:05")))
 }
 
 func (a *WarpApp) openEditor(filePath string) {

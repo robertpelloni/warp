@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.1] - 2026-06-14
+
+### Added
+- **Editor File Persistence (`SaveToFile`)**: Implemented disk writing and dirty-state tracking for active buffers in `pkg/editor`.
+- **Global Save Shortcut (`Ctrl+S`)**: Intercepted `Ctrl+S` in both the Win32 `hEditor` pane and input edit controls to seamlessly save file changes directly to disk.
+- **Unit Tests for Editor Disk Operations**: Added `TestSaveToFile` verifying persistence and content integrity.
+
 ## [v0.2.0] - 2026-06-14
 
 ### Added
