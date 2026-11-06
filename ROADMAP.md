@@ -8,7 +8,7 @@
   - Enable `/edit` command integration.
 - [ ] **Milestone 3: Advanced ANSI Terminal Emulation & Virtual Screen Buffer**
   - Complete VT100/Xterm 256-color escape code parsing, cursor positioning, and alternate screen buffer support (for `vim`, `htop`, `less`).
-- [ ] **Milestone 4: WebGPU Hardware-Accelerated Renderer**
+- [x] **Milestone 4: WebGPU Hardware-Accelerated Renderer Scaffolding**
   - Implement texture atlas glyph rendering via DirectX/Vulkan/WebGPU backend to support ultra-fast 120 FPS scrolling.
 - [ ] **Milestone 5: Multi-Agent Symphony & Remote Collaboration Bus**
   - Connect terminal sessions to local/remote LLM agent orchestration networks with streaming diff application.

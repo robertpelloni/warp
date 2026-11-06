@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.4] - 2026-06-14
+
+### Added
+- **Texture Atlas Glyph Caching (`TextureAtlas`)**: Implemented dynamic 2D glyph packing and UV coordinate calculation in `pkg/renderer/renderer.go`.
+- **Fast Glyph Retrieval**: Thread-safe glyph query caching via `Get(rune)` and automatic row-wrapping allocation.
+- **Renderer Test Suite**: Added test coverage in `pkg/renderer/renderer_test.go` verifying allocation, caching, and boundary overflow handling.
+
 ## [v0.2.3] - 2026-06-14
 
 ### Added

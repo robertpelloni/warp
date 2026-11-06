@@ -28,3 +28,7 @@
 - Upgraded `pkg/terminal/terminal.go` ANSI engine with 256-color palette (`38;5`) and 24-bit TrueColor (`38;2`) RGB support.
 - Added `TestExtendedANSIColors` test suite in `pkg/terminal/terminal_test.go`.
 - Updated VERSION.md, CHANGELOG.md, and TODO.md.
+
+## Release v0.2.4 Updates:
+- Expanded `pkg/renderer/renderer.go` with `TextureAtlas` and `Glyph` structures supporting 2D UV texture mapping.
+- Added `pkg/renderer/renderer_test.go` and verified tests and cross-compilation.
