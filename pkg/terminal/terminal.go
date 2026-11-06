@@ -499,3 +499,165 @@ func parse256Color(n int) color.Color {
 	gray := uint8((n-232)*10 + 8)
 	return color.NRGBA{gray, gray, gray, 255}
 }
+
+// ─── Virtual Screen Buffer (Milestone 3) ─────────────────────────
+
+// Cell represents a character cell in the virtual terminal grid.
+type Cell struct {
+	Rune rune
+	FG   color.Color
+	BG   color.Color
+	Bold bool
+}
+
+// ScreenBuffer represents a 2D virtual terminal screen buffer.
+type ScreenBuffer struct {
+	mu      sync.RWMutex
+	Cols    int
+	Rows    int
+	CursorX int
+	CursorY int
+	Grid    [][]Cell
+}
+
+// NewScreenBuffer creates a 2D virtual screen buffer of given dimensions.
+func NewScreenBuffer(cols, rows int) *ScreenBuffer {
+	if cols <= 0 {
+		cols = 80
+	}
+	if rows <= 0 {
+		rows = 24
+	}
+	sb := &ScreenBuffer{
+		Cols: cols,
+		Rows: rows,
+		Grid: make([][]Cell, rows),
+	}
+	for r := 0; r < rows; r++ {
+		sb.Grid[r] = make([]Cell, cols)
+		for c := 0; c < cols; c++ {
+			sb.Grid[r][c] = Cell{Rune: ' '}
+		}
+	}
+	return sb
+}
+
+// WriteRune writes a rune at current cursor position and advances.
+func (sb *ScreenBuffer) WriteRune(r rune, fg, bg color.Color, bold bool) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+
+	if r == '\n' {
+		sb.CursorY++
+		sb.CursorX = 0
+		if sb.CursorY >= sb.Rows {
+			sb.scrollUp()
+		}
+		return
+	}
+	if r == '\r' {
+		sb.CursorX = 0
+		return
+	}
+
+	if sb.CursorX >= sb.Cols {
+		sb.CursorX = 0
+		sb.CursorY++
+		if sb.CursorY >= sb.Rows {
+			sb.scrollUp()
+		}
+	}
+
+	if sb.CursorY < sb.Rows && sb.CursorX < sb.Cols {
+		sb.Grid[sb.CursorY][sb.CursorX] = Cell{
+			Rune: r,
+			FG:   fg,
+			BG:   bg,
+			Bold: bold,
+		}
+		sb.CursorX++
+	}
+}
+
+// SetCursor moves cursor to 0-based coordinate (col, row).
+func (sb *ScreenBuffer) SetCursor(col, row int) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	if col < 0 {
+		col = 0
+	}
+	if col >= sb.Cols {
+		col = sb.Cols - 1
+	}
+	if row < 0 {
+		row = 0
+	}
+	if row >= sb.Rows {
+		row = sb.Rows - 1
+	}
+	sb.CursorX = col
+	sb.CursorY = row
+}
+
+// MoveCursor relative to current position.
+func (sb *ScreenBuffer) MoveCursor(dx, dy int) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	nx := sb.CursorX + dx
+	ny := sb.CursorY + dy
+	if nx < 0 {
+		nx = 0
+	}
+	if nx >= sb.Cols {
+		nx = sb.Cols - 1
+	}
+	if ny < 0 {
+		ny = 0
+	}
+	if ny >= sb.Rows {
+		ny = sb.Rows - 1
+	}
+	sb.CursorX = nx
+	sb.CursorY = ny
+}
+
+// Clear clears the entire buffer and resets cursor to (0,0).
+func (sb *ScreenBuffer) Clear() {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	for r := 0; r < sb.Rows; r++ {
+		for c := 0; c < sb.Cols; c++ {
+			sb.Grid[r][c] = Cell{Rune: ' '}
+		}
+	}
+	sb.CursorX = 0
+	sb.CursorY = 0
+}
+
+func (sb *ScreenBuffer) scrollUp() {
+	for r := 1; r < sb.Rows; r++ {
+		sb.Grid[r-1] = sb.Grid[r]
+	}
+	sb.Grid[sb.Rows-1] = make([]Cell, sb.Cols)
+	for c := 0; c < sb.Cols; c++ {
+		sb.Grid[sb.Rows-1][c] = Cell{Rune: ' '}
+	}
+	sb.CursorY = sb.Rows - 1
+}
+
+// String renders the buffer to a plain text string.
+func (sb *ScreenBuffer) String() string {
+	sb.mu.RLock()
+	defer sb.mu.RUnlock()
+
+	var b strings.Builder
+	for r := 0; r < sb.Rows; r++ {
+		for c := 0; c < sb.Cols; c++ {
+			b.WriteRune(sb.Grid[r][c].Rune)
+		}
+		if r < sb.Rows-1 {
+			b.WriteByte('\n')
+		}
+	}
+	return b.String()
+}

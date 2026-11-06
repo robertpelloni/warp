@@ -32,3 +32,7 @@
 ## Release v0.2.4 Updates:
 - Expanded `pkg/renderer/renderer.go` with `TextureAtlas` and `Glyph` structures supporting 2D UV texture mapping.
 - Added `pkg/renderer/renderer_test.go` and verified tests and cross-compilation.
+
+## Release v0.2.5 Updates:
+- Completed Milestone 3 core: Added `ScreenBuffer` with 2D character cell grid, cursor positioning (`SetCursor`, `MoveCursor`), and terminal line scrolling.
+- Verified test suite and cross-compilation.

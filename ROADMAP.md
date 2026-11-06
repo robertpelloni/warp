@@ -6,7 +6,7 @@
   - Merge terminal output, command blocks, and IDE editor buffer into a single responsive window.
   - Integrate system tray icon with background server shutdown capability.
   - Enable `/edit` command integration.
-- [ ] **Milestone 3: Advanced ANSI Terminal Emulation & Virtual Screen Buffer**
+- [x] **Milestone 3: Advanced ANSI Terminal Emulation & Virtual Screen Buffer**
   - Complete VT100/Xterm 256-color escape code parsing, cursor positioning, and alternate screen buffer support (for `vim`, `htop`, `less`).
 - [x] **Milestone 4: WebGPU Hardware-Accelerated Renderer Scaffolding**
   - Implement texture atlas glyph rendering via DirectX/Vulkan/WebGPU backend to support ultra-fast 120 FPS scrolling.

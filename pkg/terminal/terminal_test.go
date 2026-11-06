@@ -211,3 +211,38 @@ func TestExtendedANSIColors(t *testing.T) {
 		t.Fatalf("expected 2 color events, got %d", len(colors))
 	}
 }
+
+func TestScreenBufferOperations(t *testing.T) {
+	sb := NewScreenBuffer(10, 4)
+	if sb.Cols != 10 || sb.Rows != 4 {
+		t.Fatalf("unexpected screen buffer size: %dx%d", sb.Cols, sb.Rows)
+	}
+
+	// Write text
+	for _, r := range "Hello" {
+		sb.WriteRune(r, nil, nil, false)
+	}
+	if sb.CursorX != 5 || sb.CursorY != 0 {
+		t.Errorf("expected cursor at (5, 0), got (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	// Move cursor
+	sb.SetCursor(2, 2)
+	if sb.CursorX != 2 || sb.CursorY != 2 {
+		t.Errorf("SetCursor failed: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	sb.MoveCursor(1, -1)
+	if sb.CursorX != 3 || sb.CursorY != 1 {
+		t.Errorf("MoveCursor failed: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	// Clear
+	sb.Clear()
+	if sb.CursorX != 0 || sb.CursorY != 0 {
+		t.Errorf("Clear did not reset cursor: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+	if sb.Grid[0][0].Rune != ' ' {
+		t.Errorf("Clear did not blank cells: got %c", sb.Grid[0][0].Rune)
+	}
+}

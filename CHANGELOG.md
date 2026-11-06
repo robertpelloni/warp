@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.5] - 2026-06-14
+
+### Added
+- **Virtual Screen Buffer (`ScreenBuffer`)**: Added 2D character grid emulation with `Cell` color and styling attributes in `pkg/terminal/terminal.go`.
+- **Cursor Positioning & Scrolling**: Implemented `WriteRune`, `SetCursor`, `MoveCursor`, line-wrapping, and vertical scroll buffer shifts (`scrollUp`).
+- **Screen Buffer Test Suite**: Added `TestScreenBufferOperations` in `pkg/terminal/terminal_test.go`.
+
 ## [v0.2.4] - 2026-06-14
 
 ### Added
