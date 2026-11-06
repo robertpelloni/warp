@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.3] - 2026-06-14
+
+### Added
+- **256-Color & 24-bit TrueColor ANSI Processing**: Extended `parseANSIColor` and `ParseANSI` in `pkg/terminal/terminal.go` to support extended SGR parameters (`38;5;n`, `48;5;n`, `38;2;r;g;b`, `48;2;r;g;b`).
+- **ANSI Color Cube & Grayscale Calculation**: Added 6x6x6 color cube and grayscale ramp interpolation for xterm-256 color lookup.
+- **Unit Test Coverage for Extended ANSI**: Added `TestExtendedANSIColors` in `pkg/terminal/terminal_test.go`.
+
 ## [v0.2.2] - 2026-06-14
 
 ### Added

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image/color"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -399,8 +400,9 @@ func parseANSIColor(params string, final byte) *ANSIColor {
 	}
 
 	for i := 0; i < len(parts); i++ {
-		switch parts[i] {
-		case "0":
+		p := parts[i]
+		switch p {
+		case "0", "":
 			c.Reset = true
 		case "1":
 			c.Bold = true
@@ -420,6 +422,19 @@ func parseANSIColor(params string, final byte) *ANSIColor {
 			c.FG = color.NRGBA{0, 205, 205, 255}
 		case "37":
 			c.FG = color.NRGBA{229, 229, 229, 255}
+		case "38":
+			// Extended foreground: 38;5;n (256-color) or 38;2;r;g;b (truecolor)
+			if i+2 < len(parts) && parts[i+1] == "5" {
+				val, _ := strconv.Atoi(parts[i+2])
+				c.FG = parse256Color(val)
+				i += 2
+			} else if i+4 < len(parts) && parts[i+1] == "2" {
+				r, _ := strconv.Atoi(parts[i+2])
+				g, _ := strconv.Atoi(parts[i+3])
+				b, _ := strconv.Atoi(parts[i+4])
+				c.FG = color.NRGBA{uint8(r), uint8(g), uint8(b), 255}
+				i += 4
+			}
 		case "39":
 			c.FG = nil // default FG
 		case "40":
@@ -438,9 +453,49 @@ func parseANSIColor(params string, final byte) *ANSIColor {
 			c.BG = color.NRGBA{0, 205, 205, 255}
 		case "47":
 			c.BG = color.NRGBA{229, 229, 229, 255}
+		case "48":
+			// Extended background: 48;5;n or 48;2;r;g;b
+			if i+2 < len(parts) && parts[i+1] == "5" {
+				val, _ := strconv.Atoi(parts[i+2])
+				c.BG = parse256Color(val)
+				i += 2
+			} else if i+4 < len(parts) && parts[i+1] == "2" {
+				r, _ := strconv.Atoi(parts[i+2])
+				g, _ := strconv.Atoi(parts[i+3])
+				b, _ := strconv.Atoi(parts[i+4])
+				c.BG = color.NRGBA{uint8(r), uint8(g), uint8(b), 255}
+				i += 4
+			}
 		case "49":
 			c.BG = nil
 		}
 	}
 	return c
+}
+
+func parse256Color(n int) color.Color {
+	if n < 0 || n > 255 {
+		return color.NRGBA{128, 128, 128, 255}
+	}
+	// Standard 16 colors
+	if n < 16 {
+		basic := []color.NRGBA{
+			{0, 0, 0, 255}, {205, 0, 0, 255}, {0, 205, 0, 255}, {205, 205, 0, 255},
+			{0, 0, 238, 255}, {205, 0, 205, 255}, {0, 205, 205, 255}, {229, 229, 229, 255},
+			{127, 127, 127, 255}, {255, 0, 0, 255}, {0, 255, 0, 255}, {255, 255, 0, 255},
+			{92, 92, 255, 255}, {255, 0, 255, 255}, {0, 255, 255, 255}, {255, 255, 255, 255},
+		}
+		return basic[n]
+	}
+	// 6x6x6 color cube (16-231)
+	if n < 232 {
+		n -= 16
+		r := uint8((n / 36) * 51)
+		g := uint8(((n % 36) / 6) * 51)
+		b := uint8((n % 6) * 51)
+		return color.NRGBA{r, g, b, 255}
+	}
+	// Grayscale (232-255)
+	gray := uint8((n-232)*10 + 8)
+	return color.NRGBA{gray, gray, gray, 255}
 }

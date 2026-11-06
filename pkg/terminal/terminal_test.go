@@ -188,3 +188,26 @@ func TestBlocksInitiallyEmpty(t *testing.T) {
 
 // Ensure strings import is used
 var _ strings.Builder
+
+func TestExtendedANSIColors(t *testing.T) {
+	// Test 256-color foreground: \x1b[38;5;196m (bright red)
+	text, colors := ParseANSI("\x1b[38;5;196m256 red\x1b[0m")
+	if text != "256 red" {
+		t.Errorf("expected '256 red', got %q", text)
+	}
+	if len(colors) != 2 {
+		t.Fatalf("expected 2 color events, got %d", len(colors))
+	}
+	if colors[0].FG == nil {
+		t.Error("expected non-nil FG for 256 color")
+	}
+
+	// Test 24-bit TrueColor: \x1b[38;2;120;200;250m
+	text, colors = ParseANSI("\x1b[38;2;120;200;250mtruecolor\x1b[0m")
+	if text != "truecolor" {
+		t.Errorf("expected 'truecolor', got %q", text)
+	}
+	if len(colors) != 2 {
+		t.Fatalf("expected 2 color events, got %d", len(colors))
+	}
+}

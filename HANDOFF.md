@@ -23,3 +23,8 @@
 ## Release v0.2.2 Updates:
 - Added `Tokenize` syntax analysis engine in `pkg/editor/lexer.go` supporting Go, Rust, and Python keywords, comments, strings, and operators.
 - Validated with unit tests in `pkg/editor/lexer_test.go`.
+
+## Release v0.2.3 Updates:
+- Upgraded `pkg/terminal/terminal.go` ANSI engine with 256-color palette (`38;5`) and 24-bit TrueColor (`38;2`) RGB support.
+- Added `TestExtendedANSIColors` test suite in `pkg/terminal/terminal_test.go`.
+- Updated VERSION.md, CHANGELOG.md, and TODO.md.

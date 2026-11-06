@@ -8,6 +8,6 @@
 - [x] Implement `/edit <file>` command in `pkg/command/engine.go`.
 - [x] Write unit tests for `pkg/pty` and `/edit` command execution.
 - [x] Create governance documentation (`VERSION.md`, `VISION.md`, `MEMORY.md`, `DEPLOY.md`, `IDEAS.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, `HANDOFF.md`, `LLM_INSTRUCTIONS.md`).
-- [ ] Enhance ANSI escape sequence parsing for complex cursor movements.
+- [x] Enhance ANSI escape sequence parsing for complex cursor movements, 256 colors, and TrueColor.
 - [x] Add syntax highlighting lexer for Go, Rust, and Python in the IDE editor pane.
 - [x] Implement file save listener (`Ctrl+S`) in the editor pane.
