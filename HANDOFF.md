@@ -40,3 +40,7 @@
 ## Release v0.2.6 Updates:
 - Integrated interactive header markers `[?]` and dynamic workflow tooltips across the unified dashboard UI components in `pkg/app/app_windows.go`.
 - Validated with presubmit suite and Windows cross-compilation.
+
+## Release v0.2.7 Updates:
+- Added dynamic layout modes (`TerminalOnly` and `EditorOnly`) in `pkg/app/app_windows.go` with responsive panel expansion and visibility toggling.
+- Added test coverage in `pkg/app/app_test.go`.

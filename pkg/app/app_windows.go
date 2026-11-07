@@ -55,13 +55,15 @@ const (
 type WarpApp struct {
 	mu sync.Mutex
 
-	sessMgr    *session.Manager
-	cmdEngine  *command.Engine
-	editEngine *editor.Editor
-	warpTheme  *theme.WarpTheme
-	ctx        context.Context
-	cancel     context.CancelFunc
-	shell      string
+	sessMgr      *session.Manager
+	cmdEngine    *command.Engine
+	editEngine   *editor.Editor
+	warpTheme    *theme.WarpTheme
+	ctx          context.Context
+	cancel       context.CancelFunc
+	shell        string
+	terminalOnly bool
+	editorOnly   bool
 
 	// Win32 window handles
 	hMainWnd    win32.HWND
@@ -108,12 +110,14 @@ func New(cfg Config) *WarpApp {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	a := &WarpApp{
-		sessMgr:    session.NewManager(),
-		cmdEngine:  command.NewEngine(),
-		editEngine: editor.New(),
-		ctx:        ctx,
-		cancel:     cancel,
-		shell:      cfg.Shell,
+		sessMgr:      session.NewManager(),
+		cmdEngine:    command.NewEngine(),
+		editEngine:   editor.New(),
+		ctx:          ctx,
+		cancel:       cancel,
+		shell:        cfg.Shell,
+		terminalOnly: cfg.TerminalOnly,
+		editorOnly:   cfg.EditorOnly,
 	}
 
 	if cfg.Theme != "" {
@@ -545,6 +549,34 @@ func (a *WarpApp) layoutControls() {
 		remainingW = w - pad*2
 	}
 
+	if a.terminalOnly {
+		win32.ShowWindow(a.hEditor, win32.SW_HIDE)
+		outputW := w - blockW - pad*3
+		if outputW < 200 {
+			outputW = w - pad*2
+			blockW = 0
+		}
+		win32.MoveWindow(a.hOutput, pad, pad, outputW, contentH, true)
+		if blockW > 0 {
+			win32.ShowWindow(a.hBlocks, win32.SW_SHOW)
+			win32.MoveWindow(a.hBlocks, outputW+pad*2, pad, blockW, contentH, true)
+		} else {
+			win32.ShowWindow(a.hBlocks, win32.SW_HIDE)
+		}
+		return
+	}
+
+	if a.editorOnly {
+		win32.ShowWindow(a.hOutput, win32.SW_HIDE)
+		win32.ShowWindow(a.hBlocks, win32.SW_HIDE)
+		win32.ShowWindow(a.hEditor, win32.SW_SHOW)
+		win32.MoveWindow(a.hEditor, pad, pad, w-pad*2, contentH, true)
+		return
+	}
+
+	win32.ShowWindow(a.hOutput, win32.SW_SHOW)
+	win32.ShowWindow(a.hEditor, win32.SW_SHOW)
+
 	terminalW := remainingW / 2
 	editorW := remainingW - terminalW
 
@@ -552,7 +584,10 @@ func (a *WarpApp) layoutControls() {
 	win32.MoveWindow(a.hEditor, pad*2+terminalW, pad, editorW, contentH, true)
 
 	if blockW > 0 {
+		win32.ShowWindow(a.hBlocks, win32.SW_SHOW)
 		win32.MoveWindow(a.hBlocks, pad*3+terminalW+editorW, pad, blockW, contentH, true)
+	} else {
+		win32.ShowWindow(a.hBlocks, win32.SW_HIDE)
 	}
 }
 

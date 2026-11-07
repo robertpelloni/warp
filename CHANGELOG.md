@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.7] - 2026-06-14
+
+### Added
+- **Dynamic Dashboard Layout Modes**: Added support for `--terminal-only` and `--editor-only` layout modes in `pkg/app/app_windows.go`, dynamically adjusting control visibility and dimensions (`ShowWindow` with `SW_HIDE`/`SW_SHOW`).
+- **Responsive Workspace Resizing**: Automatically expands the active pane (Terminal or Editor) while hiding secondary panes based on flag configuration.
+- **App Test Suite**: Added `pkg/app/app_test.go` covering configuration initialization and theme loading.
+
 ## [v0.2.6] - 2026-06-14
 
 ### Added
