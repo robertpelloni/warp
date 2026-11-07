@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.3.0] - 2026-06-14
+
+### Added
+- **UI Redraw Batching & Anti-Jitter Optimization**: Added `WM_SETREDRAW` support in `pkg/win32/win32.go` and integrated redraw freeze/invalidation batching into `layoutControls` in `pkg/app/app_windows.go`.
+- **Flicker-Free Resizing**: Eliminates UI tearing and visual jitter during rapid window and panel resizes.
+
 ## [v0.2.9] - 2026-06-14
 
 ### Added

@@ -786,3 +786,8 @@ type CHARFORMAT2W struct {
 	BRevAuthor      byte
 	BReserved1      byte
 }
+
+// Redraw constants
+const (
+	WM_SETREDRAW = 0x000B
+)

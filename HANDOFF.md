@@ -53,3 +53,7 @@
 ## Release v0.2.9 Updates:
 - Added RichEdit API bindings (`CHARFORMAT2W`, `CHARRANGE`, `EM_SETCHARFORMAT`) in `pkg/win32/win32.go`.
 - Added test in `pkg/win32/win32_test.go` and verified Windows cross-compilation.
+
+## Release v0.3.0 Updates:
+- Optimized Win32 layout redrawing with `WM_SETREDRAW` batching to eliminate visual jitter and UI tearing during panel resizing.
+- Presubmit checks and all unit tests verified.

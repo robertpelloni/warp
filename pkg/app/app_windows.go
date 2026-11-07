@@ -520,6 +520,13 @@ func (a *WarpApp) mainWndProc(hWnd win32.HWND, msg uint32, wParam uintptr, lPara
 // -- Layout: Unified Single-Dashboard Layout --
 
 func (a *WarpApp) layoutControls() {
+	if a.hMainWnd != 0 {
+		win32.SendMessage(a.hMainWnd, win32.WM_SETREDRAW, 0, 0)
+		defer func() {
+			win32.SendMessage(a.hMainWnd, win32.WM_SETREDRAW, 1, 0)
+			win32.InvalidateRect(a.hMainWnd, nil, true)
+		}()
+	}
 	rc := win32.GetClientRect(a.hMainWnd)
 	w := rc.Right - rc.Left
 	h := rc.Bottom - rc.Top
