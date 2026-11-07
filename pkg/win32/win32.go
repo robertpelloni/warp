@@ -105,28 +105,28 @@ const (
 	WS_EX_CLIENTEDGE    = 0x00000200
 
 	// Edit control styles
-	ES_MULTILINE     = 0x0004
-	ES_AUTOVSCROLL   = 0x0040
-	ES_AUTOHSCROLL   = 0x0080
-	ES_WANTRETURN    = 0x1000
-	ES_READONLY      = 0x0800
+	ES_MULTILINE   = 0x0004
+	ES_AUTOVSCROLL = 0x0040
+	ES_AUTOHSCROLL = 0x0080
+	ES_WANTRETURN  = 0x1000
+	ES_READONLY    = 0x0800
 
 	// Show window constants
-	SW_SHOW      = 5
+	SW_SHOW        = 5
 	SW_SHOWDEFAULT = 10
 
 	// Messages
-	WM_DESTROY       = 0x0002
-	WM_PAINT         = 0x000F
-	WM_COMMAND       = 0x0111
-	WM_SIZE          = 0x0005
-	WM_SETFONT       = 0x0030
-	WM_TIMER         = 0x0113
-	WM_KEYDOWN       = 0x0100
-	WM_KEYUP         = 0x0101
-	WM_CHAR          = 0x0102
-	WM_ERASEBKGND    = 0x0014
-	WM_CTLCOLOREDIT  = 0x0133
+	WM_DESTROY        = 0x0002
+	WM_PAINT          = 0x000F
+	WM_COMMAND        = 0x0111
+	WM_SIZE           = 0x0005
+	WM_SETFONT        = 0x0030
+	WM_TIMER          = 0x0113
+	WM_KEYDOWN        = 0x0100
+	WM_KEYUP          = 0x0101
+	WM_CHAR           = 0x0102
+	WM_ERASEBKGND     = 0x0014
+	WM_CTLCOLOREDIT   = 0x0133
 	WM_CTLCOLORSTATIC = 0x0138
 	WM_GETMINMAXINFO  = 0x0024
 	WM_NCCREATE       = 0x0081
@@ -135,38 +135,38 @@ const (
 	WM_SETTEXT        = 0x000C
 	WM_GETTEXT        = 0x000D
 	WM_GETTEXTLENGTH  = 0x000E
-	EM_SETSEL        = 0x00B1
-	EM_REPLACESEL    = 0x00C2
-	EM_GETLINECOUNT  = 0x00BA
-	EM_SCROLL        = 0x00B5
-	EM_LINESCROLL    = 0x00B6
-	EM_SETREADONLY   = 0x00CF
+	EM_SETSEL         = 0x00B1
+	EM_REPLACESEL     = 0x00C2
+	EM_GETLINECOUNT   = 0x00BA
+	EM_SCROLL         = 0x00B5
+	EM_LINESCROLL     = 0x00B6
+	EM_SETREADONLY    = 0x00CF
 
 	// Scroll bar constants
-	SB_VSCROLL     = 1
-	SB_BOTTOM      = 7
-	SB_LINEDOWN    = 1
-	SB_LINEUP      = 0
+	SB_VSCROLL  = 1
+	SB_BOTTOM   = 7
+	SB_LINEDOWN = 1
+	SB_LINEUP   = 0
 
 	// Menu constants
-	MF_STRING      = 0x00000000
-	MF_SEPARATOR   = 0x00000800
-	MF_POPUP       = 0x00000010
+	MF_STRING    = 0x00000000
+	MF_SEPARATOR = 0x00000800
+	MF_POPUP     = 0x00000010
 
 	// Virtual key codes
-	VK_RETURN      = 0x0D
-	VK_UP          = 0x26
-	VK_DOWN        = 0x28
-	VK_CONTROL     = 0x11
-	VK_SHIFT       = 0x10
-	VK_TAB         = 0x09
-	VK_ESCAPE      = 0x1B
-	VK_BACK        = 0x08
-	VK_HOME        = 0x24
-	VK_END         = 0x23
-	VK_PRIOR       = 0x21 // Page Up
-	VK_NEXT        = 0x22 // Page Down
-	VK_F5          = 0x74
+	VK_RETURN  = 0x0D
+	VK_UP      = 0x26
+	VK_DOWN    = 0x28
+	VK_CONTROL = 0x11
+	VK_SHIFT   = 0x10
+	VK_TAB     = 0x09
+	VK_ESCAPE  = 0x1B
+	VK_BACK    = 0x08
+	VK_HOME    = 0x24
+	VK_END     = 0x23
+	VK_PRIOR   = 0x21 // Page Up
+	VK_NEXT    = 0x22 // Page Down
+	VK_F5      = 0x74
 
 	// Color constants
 	COLOR_WINDOW     = 5
@@ -459,7 +459,7 @@ func DrawText(hdc HDC, text string, rc *RECT, format uint32) int32 {
 	procDrawTextW.Call(
 		uintptr(hdc),
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(text))),
-		1<<32 - 1,
+		1<<32-1,
 		uintptr(unsafe.Pointer(rc)),
 		uintptr(format),
 	)
@@ -614,3 +614,180 @@ const GWLP_WNDPROC = -4
 
 // Debug placeholder
 var _ = fmt.Sprintf
+
+// ─── System Tray and Menu Bindings ─────────────────────────────
+
+var (
+	modshell32 = windows.NewLazyDLL("shell32.dll")
+
+	procShellNotifyIconW = modshell32.NewProc("Shell_NotifyIconW")
+	procCreatePopupMenu  = moduser32.NewProc("CreatePopupMenu")
+	procAppendMenuW      = moduser32.NewProc("AppendMenuW")
+	procTrackPopupMenu   = moduser32.NewProc("TrackPopupMenu")
+	procDestroyMenu      = moduser32.NewProc("DestroyMenu")
+	procGetCursorPos     = moduser32.NewProc("GetCursorPos")
+)
+
+// NotifyIcon messages
+const (
+	NIM_ADD        = 0x00000000
+	NIM_MODIFY     = 0x00000001
+	NIM_DELETE     = 0x00000002
+	NIM_SETVERSION = 0x00000004
+
+	NIF_MESSAGE = 0x00000001
+	NIF_ICON    = 0x00000002
+	NIF_TIP     = 0x00000004
+	NIF_STATE   = 0x00000008
+	NIF_INFO    = 0x00000010
+
+	// TrackPopupMenu flags
+	TPM_LEFTALIGN   = 0x0000
+	TPM_BOTTOMALIGN = 0x0020
+	TPM_RIGHTBUTTON = 0x0002
+
+	// Standard Icons
+	IDI_APPLICATION = 32512
+	IDI_INFORMATION = 32516
+
+	// Mouse messages for tray
+	WM_RBUTTONUP     = 0x0205
+	WM_LBUTTONUP     = 0x0202
+	WM_LBUTTONDBLCLK = 0x0203
+)
+
+// HMENU represents a menu handle.
+type HMENU uintptr
+
+// NOTIFYICONDATAW represents Windows shell notification icon data.
+type NOTIFYICONDATAW struct {
+	CbSize            uint32
+	HWnd              HWND
+	UID               uint32
+	UFlags            uint32
+	UCallbackMessage  uint32
+	HIcon             HICON
+	SzTip             [128]uint16
+	DwState           uint32
+	DwStateMask       uint32
+	SzInfo            [256]uint16
+	UTimeoutOrVersion uint32
+	SzInfoTitle       [64]uint16
+	DwInfoFlags       uint32
+	GuidItem          [16]byte
+	HBalloonIcon      HICON
+}
+
+// ShellNotifyIcon calls Shell_NotifyIconW.
+func ShellNotifyIcon(dwMessage uint32, lpData *NOTIFYICONDATAW) bool {
+	ret, _, _ := procShellNotifyIconW.Call(uintptr(dwMessage), uintptr(unsafe.Pointer(lpData)))
+	return ret != 0
+}
+
+// CreatePopupMenu creates an empty popup menu.
+func CreatePopupMenu() HMENU {
+	ret, _, _ := procCreatePopupMenu.Call()
+	return HMENU(ret)
+}
+
+// AppendMenu appends an item to the specified menu.
+func AppendMenu(hMenu HMENU, uFlags uint32, uIDNewItem uintptr, lpNewItem string) bool {
+	var itemPtr *uint16
+	if lpNewItem != "" {
+		itemPtr = windows.StringToUTF16Ptr(lpNewItem)
+	}
+	ret, _, _ := procAppendMenuW.Call(uintptr(hMenu), uintptr(uFlags), uIDNewItem, uintptr(unsafe.Pointer(itemPtr)))
+	return ret != 0
+}
+
+// TrackPopupMenu displays a shortcut menu at the specified location.
+func TrackPopupMenu(hMenu HMENU, uFlags uint32, x, y int32, hWnd HWND) bool {
+	ret, _, _ := procTrackPopupMenu.Call(uintptr(hMenu), uintptr(uFlags), uintptr(x), uintptr(y), 0, uintptr(hWnd), 0)
+	return ret != 0
+}
+
+// DestroyMenu destroys a menu and frees any memory that the menu occupies.
+func DestroyMenu(hMenu HMENU) bool {
+	ret, _, _ := procDestroyMenu.Call(uintptr(hMenu))
+	return ret != 0
+}
+
+// GetCursorPos retrieves the cursor's position, in screen coordinates.
+func GetCursorPos(lpPoint *POINT) bool {
+	ret, _, _ := procGetCursorPos.Call(uintptr(unsafe.Pointer(lpPoint)))
+	return ret != 0
+}
+
+// LoadStandardIcon loads a standard system icon using LoadIconW.
+func LoadStandardIcon(iconID uintptr) HICON {
+	ret, _, _ := procLoadIconW.Call(0, iconID)
+	return HICON(ret)
+}
+
+// ShowWindow constants
+const (
+	SW_HIDE    = 0
+	SW_RESTORE = 9
+)
+
+// SetForegroundWindow brings the thread that created the specified window into the foreground and activates the window.
+func SetForegroundWindow(hWnd HWND) bool {
+	ret, _, _ := procSetForegroundWindow.Call(uintptr(hWnd))
+	return ret != 0
+}
+
+// ─── RichEdit and Character Formatting Constants ────────────────
+
+const (
+	MSFTEDIT_CLASS = "RICHEDIT50W"
+
+	// RichEdit messages
+	EM_SETCHARFORMAT = 0x0444
+	EM_EXSETSEL      = 0x0437
+
+	// Character format flags
+	SCF_SELECTION = 0x0001
+	SCF_ALL       = 0x0004
+
+	// CFM flags
+	CFM_COLOR = 0x40000000
+	CFM_BOLD  = 0x00000001
+
+	// CFE effects
+	CFE_BOLD = 0x00000001
+)
+
+// CHARRANGE represents a character range.
+type CHARRANGE struct {
+	CpMin int32
+	CpMax int32
+}
+
+// CHARFORMAT2W represents rich edit character formatting.
+type CHARFORMAT2W struct {
+	CbSize          uint32
+	DwMask          uint32
+	DwEffects       uint32
+	YHeight         int32
+	YOffset         int32
+	CrTextColor     uint32
+	BCharSet        byte
+	BPitchAndFamily byte
+	SzFaceName      [32]uint16
+	WWeight         uint16
+	SSpacing        int16
+	CrBackColor     uint32
+	Lcid            uint32
+	DwReserved      uint32
+	STyle           int16
+	WKerning        uint16
+	BUnderlineType  byte
+	BAnimation      byte
+	BRevAuthor      byte
+	BReserved1      byte
+}
+
+// Redraw constants
+const (
+	WM_SETREDRAW = 0x000B
+)

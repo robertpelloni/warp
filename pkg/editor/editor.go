@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 )
@@ -69,6 +70,23 @@ func (e *Editor) SetContent(path, content string) {
 		b.Content = content
 		b.Dirty = true
 	}
+}
+
+// SaveToFile writes the buffer content to disk and resets the dirty flag.
+func (e *Editor) SaveToFile(path string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	b, ok := e.buffers[path]
+	if !ok {
+		return fmt.Errorf("buffer not found: %s", path)
+	}
+
+	if err := os.WriteFile(path, []byte(b.Content), 0644); err != nil {
+		return fmt.Errorf("write file %s: %w", path, err)
+	}
+	b.Dirty = false
+	return nil
 }
 
 // Save marks a buffer as saved.

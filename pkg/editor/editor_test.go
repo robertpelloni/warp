@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -129,5 +131,31 @@ func TestLineCount(t *testing.T) {
 	b2 := &Buffer{Content: ""}
 	if b2.LineCount() != 1 {
 		t.Errorf("LineCount() for empty = %d, want 1", b2.LineCount())
+	}
+}
+
+func TestSaveToFile(t *testing.T) {
+	ed := New()
+	tmpFile := filepath.Join(t.TempDir(), "test_save.txt")
+
+	buf := ed.Open(tmpFile)
+	ed.SetContent(tmpFile, "Hello Warp Editor!\nLine 2")
+	if !buf.Dirty {
+		t.Error("expected buffer to be dirty")
+	}
+
+	if err := ed.SaveToFile(tmpFile); err != nil {
+		t.Fatalf("SaveToFile failed: %v", err)
+	}
+	if buf.Dirty {
+		t.Error("expected buffer to be clean after save")
+	}
+
+	readBack, err := os.ReadFile(tmpFile)
+	if err != nil {
+		t.Fatalf("reading saved file failed: %v", err)
+	}
+	if string(readBack) != "Hello Warp Editor!\nLine 2" {
+		t.Errorf("readBack = %q, want %q", string(readBack), "Hello Warp Editor!\nLine 2")
 	}
 }

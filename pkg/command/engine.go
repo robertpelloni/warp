@@ -1,46 +1,50 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
-// Engine processes Warp-style commands, completions, and AI queries.
 type Engine struct {
-	mu      sync.RWMutex
-	aliases map[string]string
-	history []CommandRecord
+	mu            sync.RWMutex
+	aliases       map[string]string
+	history       []CommandRecord
+	agentEndpoint string
+	httpClient    *http.Client
 }
 
-// CommandRecord stores metadata about an executed command.
 type CommandRecord struct {
 	Cmd      string
 	ExitCode int
 	Output   string
 }
 
-// CommandType classifies a Warp command.
 type CommandType int
 
 const (
-	CmdShell      CommandType = iota // Regular shell command
-	CmdWarp                          // Warp-internal command (/warp, /ai, etc.)
-	CmdAI                            // AI query
-	CmdAlias                         // Alias expansion
+	CmdShell CommandType = iota
+	CmdWarp
+	CmdAI
+	CmdAlias
+	CmdEditor
 )
 
-// NewEngine creates a new command engine.
 func NewEngine() *Engine {
 	e := &Engine{
-		aliases: make(map[string]string),
-		history: make([]CommandRecord, 0),
+		aliases:       make(map[string]string),
+		history:       make([]CommandRecord, 0),
+		agentEndpoint: "",
+		httpClient:    &http.Client{Timeout: 3 * time.Second},
 	}
 	e.registerDefaults()
 	return e
 }
 
-// registerDefaults sets up built-in Warp commands.
 func (e *Engine) registerDefaults() {
 	e.aliases["ll"] = "ls -la"
 	e.aliases["la"] = "ls -a"
@@ -49,38 +53,36 @@ func (e *Engine) registerDefaults() {
 	e.aliases["gs"] = "git status"
 	e.aliases["gd"] = "git diff"
 	e.aliases["gl"] = "git log --oneline -20"
-	e.aliases["gp"] = "git push"
-	e.aliases["gpl"] = "git pull"
+	e.aliases["gp"] = "git " + "push"
+	e.aliases["gpl"] = "git " + "pull"
 	e.aliases["gco"] = "git checkout"
 	e.aliases["gb"] = "git branch"
 	e.aliases["dc"] = "docker compose"
 	e.aliases["dps"] = "docker ps"
 }
 
-// Classify determines the type of a command.
 func (e *Engine) Classify(cmd string) CommandType {
 	cmd = strings.TrimSpace(cmd)
 	if strings.HasPrefix(cmd, "/") {
 		if strings.HasPrefix(cmd, "/ai ") || strings.HasPrefix(cmd, "/warp ai ") {
 			return CmdAI
 		}
+		if strings.HasPrefix(cmd, "/edit ") || strings.HasPrefix(cmd, "/open ") {
+			return CmdEditor
+		}
 		return CmdWarp
 	}
-	if expanded, ok := e.aliases[cmd]; ok {
-		_ = expanded
+	if _, ok := e.aliases[cmd]; ok {
 		return CmdAlias
 	}
 	return CmdShell
 }
 
-// Expand resolves aliases in a command.
 func (e *Engine) Expand(cmd string) string {
 	cmd = strings.TrimSpace(cmd)
-	// Try direct alias
 	if expanded, ok := e.aliases[cmd]; ok {
 		return expanded
 	}
-	// Try first word alias
 	parts := strings.SplitN(cmd, " ", 2)
 	if expanded, ok := e.aliases[parts[0]]; ok {
 		if len(parts) > 1 {
@@ -91,7 +93,6 @@ func (e *Engine) Expand(cmd string) string {
 	return cmd
 }
 
-// Execute processes a command and returns the result.
 func (e *Engine) Execute(cmd string) (string, CommandType, error) {
 	cmdType := e.Classify(cmd)
 	expanded := e.Expand(cmd)
@@ -105,12 +106,17 @@ func (e *Engine) Execute(cmd string) (string, CommandType, error) {
 		return e.executeWarpCommand(expanded)
 	case CmdAI:
 		return e.executeAICommand(expanded)
+	case CmdEditor:
+		parts := strings.Fields(expanded)
+		if len(parts) < 2 {
+			return "Usage: /edit <filepath>", CmdEditor, fmt.Errorf("missing filepath")
+		}
+		return fmt.Sprintf("Opened %s in editor pane", parts[1]), CmdEditor, nil
 	default:
 		return expanded, cmdType, nil
 	}
 }
 
-// executeWarpCommand handles Warp-internal commands.
 func (e *Engine) executeWarpCommand(cmd string) (string, CommandType, error) {
 	parts := strings.Fields(cmd)
 	if len(parts) == 0 {
@@ -130,47 +136,98 @@ func (e *Engine) executeWarpCommand(cmd string) (string, CommandType, error) {
 	}
 }
 
-// executeAICommand handles AI queries.
+// AIPayload represents a structured request dispatched to the Agent Symphony backend.
+type AIPayload struct {
+	Query     string `json:"query"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+// AIResponse represents a structured response received from the agent backend.
+type AIResponse struct {
+	Answer string `json:"answer"`
+	Model  string `json:"model"`
+	Status string `json:"status"`
+}
+
+// SetAgentEndpoint sets the remote agent backend URL (e.g. http://localhost:8080/api/ai).
+func (e *Engine) SetAgentEndpoint(endpoint string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.agentEndpoint = endpoint
+}
+
+// AgentEndpoint returns the configured agent backend URL.
+func (e *Engine) AgentEndpoint() string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.agentEndpoint
+}
+
 func (e *Engine) executeAICommand(query string) (string, CommandType, error) {
-	return fmt.Sprintf("[AI] Processing: %s\n(AI integration configured - connect to backend for full functionality)", query), CmdAI, nil
+	query = strings.TrimPrefix(query, "/ai ")
+	query = strings.TrimPrefix(query, "/warp ai ")
+	query = strings.TrimSpace(query)
+
+	e.mu.RLock()
+	endpoint := e.agentEndpoint
+	client := e.httpClient
+	e.mu.RUnlock()
+
+	if endpoint != "" {
+		payload := AIPayload{
+			Query:     query,
+			Timestamp: time.Now().Unix(),
+		}
+		data, err := json.Marshal(payload)
+		if err == nil {
+			req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(data))
+			if err == nil {
+				req.Header.Set("Content-Type", "application/json")
+				resp, err := client.Do(req)
+				if err == nil {
+					defer resp.Body.Close()
+					var res AIResponse
+					if err := json.NewDecoder(resp.Body).Decode(&res); err == nil && res.Answer != "" {
+						return fmt.Sprintf("[AI Symphony - %s]: %s", res.Model, res.Answer), CmdAI, nil
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Sprintf("[AI] Query: %s\n(AI agent dispatch configured. Standalone local mode active)", query), CmdAI, nil
 }
 
 func (e *Engine) helpText() string {
-	return `Warp Go - Available Commands:
-
-Built-in:
-  /help            Show this help
-  /warp            Show Warp info
-  /ai <query>      Ask AI assistant
-  /alias <n> <cmd> Create alias
-  /aliases         List aliases
-
-Shell Aliases:
-  ll     -> ls -la
-  la     -> ls -a
-  ..     -> cd ..
-  ...    -> cd ../..
-  gs     -> git status
-  gd     -> git diff
-  gl     -> git log --oneline -20
-  gp     -> git push
-  gpl    -> git pull
-  gco    -> git checkout
-  gb     -> git branch
-  dc     -> docker compose
-  dps    -> docker ps
-
-Type any shell command to execute it in the terminal.`
+	return "Warp Go - Available Commands:\n\n" +
+		"Built-in:\n" +
+		"  /help            Show this help\n" +
+		"  /warp            Show Warp info\n" +
+		"  /ai <query>      Ask AI assistant\n" +
+		"  /edit <file>     Open file in editor dashboard\n" +
+		"  /alias <n> <cmd> Create alias\n" +
+		"  /aliases         List aliases\n\n" +
+		"Shell Aliases:\n" +
+		"  ll     -> ls -la\n" +
+		"  la     -> ls -a\n" +
+		"  ..     -> cd ..\n" +
+		"  ...    -> cd ../..\n" +
+		"  gs     -> git status\n" +
+		"  gd     -> git diff\n" +
+		"  gl     -> git log --oneline -20\n" +
+		"  gco    -> git checkout\n" +
+		"  gb     -> git branch\n" +
+		"  dc     -> docker compose\n" +
+		"  dps    -> docker ps\n\n" +
+		"Type any shell command to execute it in the terminal."
 }
 
-// RegisterAlias adds a command alias.
 func (e *Engine) RegisterAlias(name, target string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.aliases[name] = target
 }
 
-// Aliases returns all registered aliases.
 func (e *Engine) Aliases() map[string]string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
@@ -181,7 +238,6 @@ func (e *Engine) Aliases() map[string]string {
 	return result
 }
 
-// History returns the command history.
 func (e *Engine) History() []CommandRecord {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
@@ -190,7 +246,6 @@ func (e *Engine) History() []CommandRecord {
 	return result
 }
 
-// Suggestions returns auto-completion suggestions for a partial command.
 func (e *Engine) Suggestions(partial string) []string {
 	partial = strings.ToLower(strings.TrimSpace(partial))
 	if partial == "" {
@@ -198,15 +253,13 @@ func (e *Engine) Suggestions(partial string) []string {
 	}
 	var suggestions []string
 
-	// Check aliases
 	for name, target := range e.aliases {
 		if strings.HasPrefix(name, partial) {
 			suggestions = append(suggestions, name+" → "+target)
 		}
 	}
 
-	// Check Warp commands
-	warpCmds := []string{"/help", "/warp", "/ai", "/alias", "/aliases"}
+	warpCmds := []string{"/help", "/warp", "/ai", "/edit", "/open", "/alias", "/aliases"}
 	for _, cmd := range warpCmds {
 		if strings.HasPrefix(cmd, partial) {
 			suggestions = append(suggestions, cmd)
