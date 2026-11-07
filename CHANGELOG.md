@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.8] - 2026-06-14
+
+### Added
+- **Agent Symphony HTTP Routing (`AIPayload`)**: Added configurable remote agent backend dispatch in `pkg/command/engine.go` with structured JSON payloads and automatic fallback to standalone mode.
+- **Agent Endpoint Management**: Added `SetAgentEndpoint` and `AgentEndpoint` accessors to route `/ai` queries to remote AI workers.
+- **Command Engine Test Suite**: Added `TestAgentEndpointAndPayload` in `pkg/command/engine_test.go`.
+
 ## [v0.2.7] - 2026-06-14
 
 ### Added

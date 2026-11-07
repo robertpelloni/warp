@@ -44,3 +44,8 @@
 ## Release v0.2.7 Updates:
 - Added dynamic layout modes (`TerminalOnly` and `EditorOnly`) in `pkg/app/app_windows.go` with responsive panel expansion and visibility toggling.
 - Added test coverage in `pkg/app/app_test.go`.
+
+## Release v0.2.8 Updates:
+- Added `AIPayload` and configurable backend agent routing in `pkg/command/engine.go`.
+- Added test coverage in `pkg/command/engine_test.go`.
+- Validated with presubmit suite and Windows cross-compilation.

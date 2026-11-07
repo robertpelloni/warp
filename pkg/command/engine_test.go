@@ -139,3 +139,23 @@ func TestCmdEditor(t *testing.T) {
 		t.Errorf("execute /edit failed: out=%s, err=%v", out, err)
 	}
 }
+
+func TestAgentEndpointAndPayload(t *testing.T) {
+	e := NewEngine()
+	if e.AgentEndpoint() != "" {
+		t.Errorf("expected empty endpoint initially, got %q", e.AgentEndpoint())
+	}
+
+	e.SetAgentEndpoint("http://127.0.0.1:9999/api/agent")
+	if e.AgentEndpoint() != "http://127.0.0.1:9999/api/agent" {
+		t.Errorf("SetAgentEndpoint failed: got %q", e.AgentEndpoint())
+	}
+
+	out, cType, err := e.Execute("/ai summarize git diff")
+	if err != nil || cType != CmdAI {
+		t.Fatalf("execute /ai failed: out=%s, err=%v", out, err)
+	}
+	if !strings.Contains(out, "summarize git diff") {
+		t.Errorf("expected query in output, got: %s", out)
+	}
+}

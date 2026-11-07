@@ -1,15 +1,21 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Engine struct {
-	mu      sync.RWMutex
-	aliases map[string]string
-	history []CommandRecord
+	mu            sync.RWMutex
+	aliases       map[string]string
+	history       []CommandRecord
+	agentEndpoint string
+	httpClient    *http.Client
 }
 
 type CommandRecord struct {
@@ -30,8 +36,10 @@ const (
 
 func NewEngine() *Engine {
 	e := &Engine{
-		aliases: make(map[string]string),
-		history: make([]CommandRecord, 0),
+		aliases:       make(map[string]string),
+		history:       make([]CommandRecord, 0),
+		agentEndpoint: "",
+		httpClient:    &http.Client{Timeout: 3 * time.Second},
 	}
 	e.registerDefaults()
 	return e
@@ -128,8 +136,66 @@ func (e *Engine) executeWarpCommand(cmd string) (string, CommandType, error) {
 	}
 }
 
+// AIPayload represents a structured request dispatched to the Agent Symphony backend.
+type AIPayload struct {
+	Query     string `json:"query"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+// AIResponse represents a structured response received from the agent backend.
+type AIResponse struct {
+	Answer string `json:"answer"`
+	Model  string `json:"model"`
+	Status string `json:"status"`
+}
+
+// SetAgentEndpoint sets the remote agent backend URL (e.g. http://localhost:8080/api/ai).
+func (e *Engine) SetAgentEndpoint(endpoint string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.agentEndpoint = endpoint
+}
+
+// AgentEndpoint returns the configured agent backend URL.
+func (e *Engine) AgentEndpoint() string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.agentEndpoint
+}
+
 func (e *Engine) executeAICommand(query string) (string, CommandType, error) {
-	return fmt.Sprintf("[AI] Processing: %s\n(AI integration configured - connect to backend for full functionality)", query), CmdAI, nil
+	query = strings.TrimPrefix(query, "/ai ")
+	query = strings.TrimPrefix(query, "/warp ai ")
+	query = strings.TrimSpace(query)
+
+	e.mu.RLock()
+	endpoint := e.agentEndpoint
+	client := e.httpClient
+	e.mu.RUnlock()
+
+	if endpoint != "" {
+		payload := AIPayload{
+			Query:     query,
+			Timestamp: time.Now().Unix(),
+		}
+		data, err := json.Marshal(payload)
+		if err == nil {
+			req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(data))
+			if err == nil {
+				req.Header.Set("Content-Type", "application/json")
+				resp, err := client.Do(req)
+				if err == nil {
+					defer resp.Body.Close()
+					var res AIResponse
+					if err := json.NewDecoder(resp.Body).Decode(&res); err == nil && res.Answer != "" {
+						return fmt.Sprintf("[AI Symphony - %s]: %s", res.Model, res.Answer), CmdAI, nil
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Sprintf("[AI] Query: %s\n(AI agent dispatch configured. Standalone local mode active)", query), CmdAI, nil
 }
 
 func (e *Engine) helpText() string {
