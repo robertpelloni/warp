@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.9] - 2026-06-14
+
+### Added
+- **Win32 RichEdit & Syntax Formatting API**: Added `RICHEDIT50W` constants (`EM_SETCHARFORMAT`, `EM_EXSETSEL`) and structures (`CHARFORMAT2W`, `CHARRANGE`) in `pkg/win32/win32.go` for multi-color syntax highlighting.
+- **Win32 RichEdit Tests**: Added test coverage in `pkg/win32/win32_test.go`.
+
 ## [v0.2.8] - 2026-06-14
 
 ### Added

@@ -735,3 +735,54 @@ func SetForegroundWindow(hWnd HWND) bool {
 	ret, _, _ := procSetForegroundWindow.Call(uintptr(hWnd))
 	return ret != 0
 }
+
+// ─── RichEdit and Character Formatting Constants ────────────────
+
+const (
+	MSFTEDIT_CLASS = "RICHEDIT50W"
+
+	// RichEdit messages
+	EM_SETCHARFORMAT = 0x0444
+	EM_EXSETSEL      = 0x0437
+
+	// Character format flags
+	SCF_SELECTION = 0x0001
+	SCF_ALL       = 0x0004
+
+	// CFM flags
+	CFM_COLOR = 0x40000000
+	CFM_BOLD  = 0x00000001
+
+	// CFE effects
+	CFE_BOLD = 0x00000001
+)
+
+// CHARRANGE represents a character range.
+type CHARRANGE struct {
+	CpMin int32
+	CpMax int32
+}
+
+// CHARFORMAT2W represents rich edit character formatting.
+type CHARFORMAT2W struct {
+	CbSize          uint32
+	DwMask          uint32
+	DwEffects       uint32
+	YHeight         int32
+	YOffset         int32
+	CrTextColor     uint32
+	BCharSet        byte
+	BPitchAndFamily byte
+	SzFaceName      [32]uint16
+	WWeight         uint16
+	SSpacing        int16
+	CrBackColor     uint32
+	Lcid            uint32
+	DwReserved      uint32
+	STyle           int16
+	WKerning        uint16
+	BUnderlineType  byte
+	BAnimation      byte
+	BRevAuthor      byte
+	BReserved1      byte
+}

@@ -49,3 +49,7 @@
 - Added `AIPayload` and configurable backend agent routing in `pkg/command/engine.go`.
 - Added test coverage in `pkg/command/engine_test.go`.
 - Validated with presubmit suite and Windows cross-compilation.
+
+## Release v0.2.9 Updates:
+- Added RichEdit API bindings (`CHARFORMAT2W`, `CHARRANGE`, `EM_SETCHARFORMAT`) in `pkg/win32/win32.go`.
+- Added test in `pkg/win32/win32_test.go` and verified Windows cross-compilation.
