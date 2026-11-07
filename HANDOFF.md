@@ -36,3 +36,7 @@
 ## Release v0.2.5 Updates:
 - Completed Milestone 3 core: Added `ScreenBuffer` with 2D character cell grid, cursor positioning (`SetCursor`, `MoveCursor`), and terminal line scrolling.
 - Verified test suite and cross-compilation.
+
+## Release v0.2.6 Updates:
+- Integrated interactive header markers `[?]` and dynamic workflow tooltips across the unified dashboard UI components in `pkg/app/app_windows.go`.
+- Validated with presubmit suite and Windows cross-compilation.

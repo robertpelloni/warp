@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.2.6] - 2026-06-14
+
+### Added
+- **Dashboard UI Tooltip Markers & Guidance**: Added contextual guidance markers `[?]` and comprehensive shortcut tooltips across the Status Bar, Editor pane placeholder, and Command Blocks history.
+- **Workflow Hints**: Provided explicit keybinding documentation for instant editing (`/edit`), saving (`Ctrl+S`), palette (`Ctrl+K`), and terminal clearing (`Ctrl+L`).
+
 ## [v0.2.5] - 2026-06-14
 
 ### Added

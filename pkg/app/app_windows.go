@@ -240,7 +240,7 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 	// Status bar with detailed tooltips/hints
 	a.hStatusBar = win32.CreateWindowEx(0,
 		windows.StringToUTF16Ptr("STATIC"),
-		windows.StringToUTF16Ptr("  Ready | Shell: "+a.shell+" | Ctrl+K: Palette | Ctrl+L: Clear | Ctrl+T: New Tab | Ctrl+Shift+T: Theme | /edit <file>: IDE Pane"),
+		windows.StringToUTF16Ptr(" [?] Dashboard Ready | Shell: "+a.shell+" | [Terminal: Ctrl+L Clear] | [Editor: /edit <path>, Ctrl+S Save] | [Commands: Ctrl+K Palette, /ai <query>]"),
 		win32.WS_CHILD|win32.WS_VISIBLE,
 		0, 0, 0, 0,
 		a.hMainWnd, IDC_STATUS_BAR, hInstance, 0,
@@ -270,7 +270,7 @@ func (a *WarpApp) createControls(hInstance win32.HINSTANCE) {
 	// Editor area (Unified Dashboard IDE Pane)
 	a.hEditor = win32.CreateWindowEx(win32.WS_EX_CLIENTEDGE,
 		windows.StringToUTF16Ptr("EDIT"),
-		windows.StringToUTF16Ptr("// Warp IDE Editor Pane\r\n// Open files using `/edit <filepath>`\r\n"),
+		windows.StringToUTF16Ptr("// [?] Warp IDE Editor Pane (Unified Dashboard)\r\n// - Type `/edit <filepath>` at prompt to load buffer\r\n// - Press `Ctrl+S` anywhere to save modifications\r\n"),
 		win32.WS_CHILD|win32.WS_VISIBLE|win32.ES_MULTILINE|win32.ES_AUTOVSCROLL|win32.WS_VSCROLL,
 		0, 0, 0, 0,
 		a.hMainWnd, IDC_EDITOR_EDIT, hInstance, 0,
@@ -706,7 +706,7 @@ func (a *WarpApp) updateBlocksView() {
 	}
 	blocks := sess.Terminal.Blocks()
 	var b strings.Builder
-	b.WriteString("--- Command Blocks ---\r\n\r\n")
+	b.WriteString("--- [?] Command Blocks (Execution History) ---\r\n\r\n")
 	for i, block := range blocks {
 		icon := ">"
 		status := "*"
