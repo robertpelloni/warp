@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.3.2] - 2026-06-14
+
+### Added
+- **Categorized Unified Command Palette**: Structured `showCommandPalette` in `pkg/app/app_windows.go` with categorized functional sections (Terminal Operations, IDE Buffer & Editor, Agent & AI Commands, Appearance & Themes, Registered Aliases).
+- **Interactive Shortcut Guide**: Added clear keyboard shortcuts (`Ctrl+Enter`, `Ctrl+L`, `Ctrl+T`, `Ctrl+S`, `Ctrl+K`, `Ctrl+Shift+T`) directly inside the command palette display.
+
 ## [v0.3.1] - 2026-06-14
 
 ### Added

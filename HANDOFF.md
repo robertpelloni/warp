@@ -62,3 +62,7 @@
 - Implemented `ScreenBufferManager` in `pkg/terminal/terminal.go` for alternate screen buffer switching (`?1049h` / `?1049l`), isolating interactive full-screen CLI apps like vim and htop.
 - Added test coverage in `pkg/terminal/terminal_test.go`.
 - Verified with presubmit suite and Windows cross-compilation.
+
+## Release v0.3.2 Updates:
+- Enriched `showCommandPalette` in `pkg/app/app_windows.go` with categorized groups and shortcut documentation.
+- Validated with presubmit suite and Windows cross-compilation.

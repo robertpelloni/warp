@@ -817,26 +817,34 @@ func (a *WarpApp) createNewSession() {
 }
 
 func (a *WarpApp) showCommandPalette() {
-	var entries []string
-	entries = append(entries,
-		"/help - Show Warp commands",
-		"/ai <query> - Ask AI assistant",
-		"/edit <file> - Open file in Editor",
-		"/aliases - List aliases",
-		"New Tab (Ctrl+T)",
-		"Clear Output (Ctrl+L)",
-		"Switch Theme (Ctrl+Shift+T)",
-	)
+	var b strings.Builder
+	b.WriteString("\r\n=== [?] Unified Command Palette (Ctrl+K) ===\r\n\r\n")
+
+	b.WriteString("[Terminal Operations]\r\n")
+	b.WriteString("  Ctrl+Enter   : Execute Input Command\r\n")
+	b.WriteString("  Ctrl+L       : Clear Terminal Output Area\r\n")
+	b.WriteString("  Ctrl+T       : Open New Terminal Session / Tab\r\n")
+	b.WriteString("  Ctrl+Up/Down : Navigate Command History\r\n\r\n")
+
+	b.WriteString("[IDE Buffer & Editor]\r\n")
+	b.WriteString("  /edit <file> : Open file into Dashboard Editor\r\n")
+	b.WriteString("  /open <file> : Open file alias\r\n")
+	b.WriteString("  Ctrl+S       : Save active editor buffer to disk\r\n\r\n")
+
+	b.WriteString("[Agent & AI Commands]\r\n")
+	b.WriteString("  /ai <query>  : Ask Agent Symphony assistant\r\n")
+	b.WriteString("  /help        : Show built-in help manual\r\n")
+	b.WriteString("  /aliases     : List all active shell aliases\r\n\r\n")
+
+	b.WriteString("[Appearance & Themes]\r\n")
+	b.WriteString("  Ctrl+Shift+T : Cycle themes (Standard, Dracula, Monokai, Nord...)\r\n\r\n")
+
+	b.WriteString("[Registered Aliases]\r\n")
 	for name, target := range a.cmdEngine.Aliases() {
-		entries = append(entries, fmt.Sprintf("%s -> %s", name, target))
+		b.WriteString(fmt.Sprintf("  %-12s -> %s\r\n", name, target))
 	}
 
-	var b strings.Builder
-	b.WriteString("\r\n--- Command Palette ---\r\n\r\n")
-	for _, e := range entries {
-		b.WriteString("  " + e + "\r\n")
-	}
-	b.WriteString("\r\nType a command or /help\r\n")
+	b.WriteString("\r\nType a command, query, or /help to execute\r\n")
 	a.appendOutput(b.String())
 	win32.SetFocus(a.hInput)
 }
