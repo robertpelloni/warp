@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 Version: sourced from `VERSION.md`.
 
+## [v0.3.1] - 2026-06-14
+
+### Added
+- **Alternate Screen Buffer Manager (`ScreenBufferManager`)**: Added support in `pkg/terminal/terminal.go` for terminal private mode switching (`?1049h`, `?1049l`, `?47h`, `?47l`).
+- **Interactive Full-Screen Application Support**: Preserves the primary screen buffer while displaying full-screen apps like `vim`, `nano`, `htop`, and `less` in an isolated alternate buffer.
+- **Unit Test Coverage**: Added `TestScreenBufferManagerAlternateScreen` in `pkg/terminal/terminal_test.go`.
+
 ## [v0.3.0] - 2026-06-14
 
 ### Added

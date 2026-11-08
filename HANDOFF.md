@@ -57,3 +57,8 @@
 ## Release v0.3.0 Updates:
 - Optimized Win32 layout redrawing with `WM_SETREDRAW` batching to eliminate visual jitter and UI tearing during panel resizing.
 - Presubmit checks and all unit tests verified.
+
+## Release v0.3.1 Updates:
+- Implemented `ScreenBufferManager` in `pkg/terminal/terminal.go` for alternate screen buffer switching (`?1049h` / `?1049l`), isolating interactive full-screen CLI apps like vim and htop.
+- Added test coverage in `pkg/terminal/terminal_test.go`.
+- Verified with presubmit suite and Windows cross-compilation.

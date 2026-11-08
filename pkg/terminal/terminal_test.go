@@ -246,3 +246,37 @@ func TestScreenBufferOperations(t *testing.T) {
 		t.Errorf("Clear did not blank cells: got %c", sb.Grid[0][0].Rune)
 	}
 }
+
+func TestScreenBufferManagerAlternateScreen(t *testing.T) {
+	sbm := NewScreenBufferManager(80, 24)
+	if sbm.IsAlt {
+		t.Error("expected primary screen active initially")
+	}
+
+	for _, r := range "Primary Screen Text" {
+		sbm.Active().WriteRune(r, nil, nil, false)
+	}
+
+	// Switch to alternate screen (e.g. vim started)
+	handled := sbm.HandleEscape("?1049h")
+	if !handled || !sbm.IsAlt {
+		t.Errorf("HandleEscape(?1049h) failed: handled=%v, isAlt=%v", handled, sbm.IsAlt)
+	}
+
+	for _, r := range "Vim Buffer" {
+		sbm.Active().WriteRune(r, nil, nil, false)
+	}
+	if !strings.Contains(sbm.Active().String(), "Vim Buffer") {
+		t.Error("alternate screen should contain vim buffer text")
+	}
+
+	// Switch back to primary screen (vim quit)
+	handled = sbm.HandleEscape("?1049l")
+	if !handled || sbm.IsAlt {
+		t.Errorf("HandleEscape(?1049l) failed: handled=%v, isAlt=%v", handled, sbm.IsAlt)
+	}
+
+	if !strings.Contains(sbm.Active().String(), "Primary Screen Text") {
+		t.Error("primary screen should preserve original content")
+	}
+}

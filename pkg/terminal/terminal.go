@@ -661,3 +661,65 @@ func (sb *ScreenBuffer) String() string {
 	}
 	return b.String()
 }
+
+// ─── Alternate Screen Buffer Manager (for vim, htop, less) ───────
+
+// ScreenBufferManager manages primary and alternate 2D screen buffers.
+type ScreenBufferManager struct {
+	mu        sync.RWMutex
+	Cols      int
+	Rows      int
+	Primary   *ScreenBuffer
+	Alternate *ScreenBuffer
+	IsAlt     bool
+}
+
+// NewScreenBufferManager creates a screen buffer manager.
+func NewScreenBufferManager(cols, rows int) *ScreenBufferManager {
+	return &ScreenBufferManager{
+		Cols:      cols,
+		Rows:      rows,
+		Primary:   NewScreenBuffer(cols, rows),
+		Alternate: NewScreenBuffer(cols, rows),
+		IsAlt:     false,
+	}
+}
+
+// Active returns the currently displayed screen buffer.
+func (m *ScreenBufferManager) Active() *ScreenBuffer {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.IsAlt {
+		return m.Alternate
+	}
+	return m.Primary
+}
+
+// EnterAltScreen switches to the alternate screen buffer and blanks it.
+func (m *ScreenBufferManager) EnterAltScreen() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.IsAlt = true
+	m.Alternate.Clear()
+}
+
+// ExitAltScreen switches back to the primary screen buffer.
+func (m *ScreenBufferManager) ExitAltScreen() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.IsAlt = false
+}
+
+// HandleEscape handles terminal private mode escapes like alternate screen switching.
+func (m *ScreenBufferManager) HandleEscape(seq string) bool {
+	switch seq {
+	case "?1049h", "?47h":
+		m.EnterAltScreen()
+		return true
+	case "?1049l", "?47l":
+		m.ExitAltScreen()
+		return true
+	default:
+		return false
+	}
+}
