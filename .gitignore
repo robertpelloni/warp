@@ -62,3 +62,16 @@ __pycache__/
 # Go build binaries
 warp-go
 warp-go.exe
+crates/warp-cli/warp-cli
+warp-go/warp-cli
+warp-csharp/WarpCsharp/bin/
+warp-csharp/WarpCsharp/obj/
+warp-java/target/
+warp-ui/node_modules
+warp-ui/dist
+warp-csharp/Server/obj/
+warp-csharp/Server/bin/
+warp-csharp/Server/.vs/
+warp-csharp/Server/Server.csproj.user
+warp-csharp/Server/appsettings*.json
+warp-csharp/Server/Properties/launchSettings.json

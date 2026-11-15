@@ -1,0 +1,23 @@
+[PROJECT_MEMORY]
+
+# Ultimate Agentic Coding Harness Rebuild
+
+## Core Architecture and Multi-Language Setup
+This project aims to build a unified agentic coding harness identical across four languages: Rust (Root), Go (`warp-go`), C# (`warp-csharp`), and Java (`warp-java`). The goal is full feature parity with tools like `just-every-code` and `pi-mono` by deeply analyzing their source and translating their core abstractions natively.
+
+## Functional Abstractions Ported
+We have actively ported several major architectural domains identically across all four language environments:
+1. **Tool Orchestration:** Ported the `ToolOrchestrator`, `ToolCtx`, `ToolRuntime`, and `SandboxAttempt` pipeline.
+2. **Agent Routing:** Implemented `TurnContext` and `AgentSession` state machines to route natural language prompts to executable commands.
+3. **MCP Integration:** Ported the Model Context Protocol (`mcp-server`) `MessageProcessor` which parses JSON-RPC commands to dynamically register capabilities.
+4. **Browser Integration:** Implemented the `BrowserManager` and `CdpPage` constructs, establishing a headless automation surface.
+5. **Thread Store:** Mapped the `ThreadStore` database persistency architecture.
+6. **Pi-Mono Session State & Compaction:** We rotated submodules from `just-every-code` to `pi-mono`. From `pi-mono`, we extracted and mapped the `SessionManager` log tracking system (utilizing JSONL append logic via `SessionEntryBase`) and the `Context Compaction` pipeline (`CompactionPreparation`, `FileOperations`) to seamlessly summarize and prune long conversations.
+
+## Action Required for Next Step
+The next logical step is to port the Multi-Provider LLM API abstraction located inside `pi-mono/packages/ai` into the four target languages.
+1. Deep dive into `pi-mono/packages/ai` to understand how the Unified LLM Model Provider facade works.
+2. Implement identical model provider interfaces in Rust, Go, C#, and Java.
+3. Keep refining the CLI REPL demos to interact with these features identically.
+
+*Remember: Never commit compiled artifacts. Update .gitignore as necessary.*

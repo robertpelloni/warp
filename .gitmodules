@@ -1,0 +1,9 @@
+[submodule "submodules/pi-mono"]
+	path = submodules/pi-mono
+	url = https://github.com/badlogic/pi-mono
+[submodule "submodules/aider"]
+	path = submodules/aider
+	url = https://github.com/paul-gauthier/aider
+[submodule "submodules/codex-cli"]
+	path = submodules/codex-cli
+	url = https://github.com/just-every/code

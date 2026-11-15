@@ -13,3 +13,15 @@
   - Terminal output, IDE editor pane, and command blocks sidebar are displayed side-by-side with responsive viewport collapsing.
 - **Command Processing Engine**:
   - `pkg/command` parses internal commands (`/help`, `/warp`, `/ai`, `/edit`, `/open`), custom shell aliases (`ll`, `gs`, `gd`, `gl`), and passes normal commands to the active PTY session.
+
+# Warp: System Memories & Architectural Observations
+
+## Discovered Traits
+- The codebase enforces a rigid 4-language parity rule. Porting features must target `crates/warp-cli`, `warp-go`, `warp-csharp`, and `warp-java`.
+- Build artifacts MUST be rigorously `.gitignore`d to prevent commit bloat.
+- AI LLM API abstractions revolve around `ApiProviderRegistry`, decoupling the system prompt/message context generation from the streaming transport.
+- MCP (Model Context Protocol) is currently mocked as a generic JSON-RPC transport wrapper but needs deep implementation for tool injection.
+
+## Design Preferences
+- Heavy reliance on asynchronous streaming: `tokio::sync::mpsc` (Rust), `<-chan` (Go), `System.Threading.Channels` (C#), and `java.util.concurrent.Flow` (Java).
+- Console UX uses a unified command dispatcher (e.g., `/browser`, `/compact`, `/pimono`, `/ai`, `/prompt`).
