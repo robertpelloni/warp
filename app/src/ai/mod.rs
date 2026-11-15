@@ -24,6 +24,7 @@ pub(crate) mod conversation_status_ui;
 pub(crate) mod conversation_utils;
 pub(crate) mod document;
 pub(crate) mod get_relevant_files;
+pub mod go_harness_bridge;
 pub(crate) mod harness_display;
 pub(crate) mod llms;
 pub mod onboarding;

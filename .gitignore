@@ -58,7 +58,6 @@ __pycache__/
 
 # Agent Cache
 .pi/
-
 # Go build binaries
 warp-go
 warp-go.exe
@@ -75,3 +74,5 @@ warp-csharp/Server/.vs/
 warp-csharp/Server/Server.csproj.user
 warp-csharp/Server/appsettings*.json
 warp-csharp/Server/Properties/launchSettings.json
+rebuild/build/
+rebuild/staging/
