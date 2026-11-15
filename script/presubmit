@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "========================================"
+echo "  Warp Go Presubmit Validation Suite"
+echo "========================================"
+
+echo "--> 1. Running go fmt check..."
+FMT_DIFF=$(gofmt -l ./pkg ./cmd)
+if [ -n "$FMT_DIFF" ]; then
+    echo "Files needing formatting:"
+    echo "$FMT_DIFF"
+    gofmt -w ./pkg ./cmd
+    echo "Formatted files automatically."
+else
+    echo "Code formatting is clean."
+fi
+
+echo "--> 2. Running local unit tests..."
+go test -v -count=1 ./...
+
+echo "--> 3. Checking Windows cross-compilation..."
+GOOS=windows GOARCH=amd64 go build -buildvcs=false ./...
+
+echo "========================================"
+echo "  All Presubmit Checks Passed!"
+echo "========================================"

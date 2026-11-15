@@ -7,33 +7,33 @@ import (
 
 func TestParseANSI(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    string
-		wantText string
+		name       string
+		input      string
+		wantText   string
 		wantColors int
 	}{
 		{
-			name:     "plain text",
-			input:    "hello world",
-			wantText: "hello world",
+			name:       "plain text",
+			input:      "hello world",
+			wantText:   "hello world",
 			wantColors: 0,
 		},
 		{
-			name:     "red text",
-			input:    "\x1b[31mred text\x1b[0m",
-			wantText: "red text",
+			name:       "red text",
+			input:      "\x1b[31mred text\x1b[0m",
+			wantText:   "red text",
 			wantColors: 2, // red + reset
 		},
 		{
-			name:     "bold text",
-			input:    "\x1b[1mbold\x1b[0m",
-			wantText: "bold",
+			name:       "bold text",
+			input:      "\x1b[1mbold\x1b[0m",
+			wantText:   "bold",
 			wantColors: 2,
 		},
 		{
-			name:     "mixed colors",
-			input:    "\x1b[32mgreen\x1b[0m normal \x1b[34mblue\x1b[0m",
-			wantText: "green normal blue",
+			name:       "mixed colors",
+			input:      "\x1b[32mgreen\x1b[0m normal \x1b[34mblue\x1b[0m",
+			wantText:   "green normal blue",
 			wantColors: 4,
 		},
 	}
@@ -129,18 +129,18 @@ func TestIsPrompt(t *testing.T) {
 
 func TestParseANSIColors(t *testing.T) {
 	tests := []struct {
-		params   string
-		final    byte
-		wantNil  bool
-		wantBold bool
+		params    string
+		final     byte
+		wantNil   bool
+		wantBold  bool
 		wantReset bool
 	}{
-		{"", 'm', false, false, true},  // empty params with 'm' = reset
-		{"1", 'm', false, true, false}, // bold
-		{"0", 'm', false, false, true}, // reset
-		{"31", 'm', false, false, false}, // red fg
+		{"", 'm', false, false, true},     // empty params with 'm' = reset
+		{"1", 'm', false, true, false},    // bold
+		{"0", 'm', false, false, true},    // reset
+		{"31", 'm', false, false, false},  // red fg
 		{"1;31", 'm', false, true, false}, // bold red
-		{"x", 'A', true, false, false},  // not 'm' final
+		{"x", 'A', true, false, false},    // not 'm' final
 	}
 
 	for _, tt := range tests {
@@ -188,3 +188,95 @@ func TestBlocksInitiallyEmpty(t *testing.T) {
 
 // Ensure strings import is used
 var _ strings.Builder
+
+func TestExtendedANSIColors(t *testing.T) {
+	// Test 256-color foreground: \x1b[38;5;196m (bright red)
+	text, colors := ParseANSI("\x1b[38;5;196m256 red\x1b[0m")
+	if text != "256 red" {
+		t.Errorf("expected '256 red', got %q", text)
+	}
+	if len(colors) != 2 {
+		t.Fatalf("expected 2 color events, got %d", len(colors))
+	}
+	if colors[0].FG == nil {
+		t.Error("expected non-nil FG for 256 color")
+	}
+
+	// Test 24-bit TrueColor: \x1b[38;2;120;200;250m
+	text, colors = ParseANSI("\x1b[38;2;120;200;250mtruecolor\x1b[0m")
+	if text != "truecolor" {
+		t.Errorf("expected 'truecolor', got %q", text)
+	}
+	if len(colors) != 2 {
+		t.Fatalf("expected 2 color events, got %d", len(colors))
+	}
+}
+
+func TestScreenBufferOperations(t *testing.T) {
+	sb := NewScreenBuffer(10, 4)
+	if sb.Cols != 10 || sb.Rows != 4 {
+		t.Fatalf("unexpected screen buffer size: %dx%d", sb.Cols, sb.Rows)
+	}
+
+	// Write text
+	for _, r := range "Hello" {
+		sb.WriteRune(r, nil, nil, false)
+	}
+	if sb.CursorX != 5 || sb.CursorY != 0 {
+		t.Errorf("expected cursor at (5, 0), got (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	// Move cursor
+	sb.SetCursor(2, 2)
+	if sb.CursorX != 2 || sb.CursorY != 2 {
+		t.Errorf("SetCursor failed: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	sb.MoveCursor(1, -1)
+	if sb.CursorX != 3 || sb.CursorY != 1 {
+		t.Errorf("MoveCursor failed: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+
+	// Clear
+	sb.Clear()
+	if sb.CursorX != 0 || sb.CursorY != 0 {
+		t.Errorf("Clear did not reset cursor: (%d, %d)", sb.CursorX, sb.CursorY)
+	}
+	if sb.Grid[0][0].Rune != ' ' {
+		t.Errorf("Clear did not blank cells: got %c", sb.Grid[0][0].Rune)
+	}
+}
+
+func TestScreenBufferManagerAlternateScreen(t *testing.T) {
+	sbm := NewScreenBufferManager(80, 24)
+	if sbm.IsAlt {
+		t.Error("expected primary screen active initially")
+	}
+
+	for _, r := range "Primary Screen Text" {
+		sbm.Active().WriteRune(r, nil, nil, false)
+	}
+
+	// Switch to alternate screen (e.g. vim started)
+	handled := sbm.HandleEscape("?1049h")
+	if !handled || !sbm.IsAlt {
+		t.Errorf("HandleEscape(?1049h) failed: handled=%v, isAlt=%v", handled, sbm.IsAlt)
+	}
+
+	for _, r := range "Vim Buffer" {
+		sbm.Active().WriteRune(r, nil, nil, false)
+	}
+	if !strings.Contains(sbm.Active().String(), "Vim Buffer") {
+		t.Error("alternate screen should contain vim buffer text")
+	}
+
+	// Switch back to primary screen (vim quit)
+	handled = sbm.HandleEscape("?1049l")
+	if !handled || sbm.IsAlt {
+		t.Errorf("HandleEscape(?1049l) failed: handled=%v, isAlt=%v", handled, sbm.IsAlt)
+	}
+
+	if !strings.Contains(sbm.Active().String(), "Primary Screen Text") {
+		t.Error("primary screen should preserve original content")
+	}
+}

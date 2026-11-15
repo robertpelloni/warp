@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Warp Go
+title Warp Go - Agentic Development Environment
 
 cd /d "%~dp0"
 set "BINARY=warp-go.exe"
@@ -12,6 +12,7 @@ if "%CMD%"=="" set "CMD=run"
 if /i "%CMD%"=="run" goto :run
 if /i "%CMD%"=="build" goto :build
 if /i "%CMD%"=="test" goto :test
+if /i "%CMD%"=="presubmit" goto :presubmit
 if /i "%CMD%"=="clean" goto :clean
 if /i "%CMD%"=="help" goto :help
 echo Unknown command: %CMD%
@@ -19,19 +20,19 @@ goto :help
 
 :build
 echo.
-echo [Warp Go] Building...
+echo [Warp Go] Building unified dashboard binary...
 go mod download
 if errorlevel 1 ( echo [FAIL] Dependency download & exit /b 1 )
 go build -buildvcs=false -ldflags="-s -w -H=windowsgui" -o %BINARY% %ENTRY%
 if errorlevel 1 ( echo [FAIL] Build failed & exit /b 1 )
-for %%f in (%BINARY%) do echo [OK] %%~zf bytes
+for %%f in (%BINARY%) do echo [OK] %%~zf bytes created (%BINARY%)
 goto :end
 
 :run
 if not exist %BINARY% call :build
 if errorlevel 1 exit /b 1
 echo.
-echo [Warp Go] Starting agentic development environment...
+echo [Warp Go] Starting unified agentic development environment...
 echo.
 %BINARY%
 goto :end
@@ -39,6 +40,14 @@ goto :end
 :test
 echo [Warp Go] Running tests...
 go test ./pkg/... ./cmd/... -v -count=1 -timeout 120s
+goto :end
+
+:presubmit
+echo [Warp Go] Running full presubmit checks...
+gofmt -w ./pkg ./cmd
+go test ./... -v -count=1
+go build -buildvcs=false ./...
+echo [OK] Presubmit verification complete.
 goto :end
 
 :clean
@@ -52,29 +61,22 @@ echo.
 echo Warp Go - Usage: start.bat [command]
 echo.
 echo Commands:
-echo   run     Build and run (default)
-echo   build   Build binary only
-echo   test    Run tests
-echo   clean   Remove binary
-echo   help    Show this help
+echo   run        Build and launch unified dashboard (default)
+echo   build      Build Windows GUI binary only
+echo   test       Run test suite
+echo   presubmit  Format code and run all verification checks
+echo   clean      Remove binary and build artifacts
+echo   help       Show this help
 echo.
-echo Packages:
-echo   pkg/pty       ConPTY management (Windows)
+echo Key Components:
+echo   pkg/pty       ConPTY management and POSIX fallback
 echo   pkg/terminal  Terminal emulation and ANSI parsing
-echo   pkg/command   Command engine, aliases, AI integration
+echo   pkg/command   Command engine, /edit, aliases, AI queries
 echo   pkg/session   Terminal session/tab manager
-echo   pkg/editor    IDE editing capabilities
-echo   pkg/theme     7 built-in color themes
-echo   pkg/win32     Pure-Go Win32 API bindings
-echo   pkg/app       Main GUI application
-echo.
-echo Keyboard Shortcuts:
-echo   Enter          Execute command
-echo   Ctrl+L         Clear output
-echo   Ctrl+K         Command palette
-echo   Ctrl+T         New session
-echo   Ctrl+Shift+T   Cycle theme
-echo   Ctrl+Up/Down   Command history
+echo   pkg/editor    IDE editing engine
+echo   pkg/theme     7 built-in themes
+echo   pkg/win32     Win32 API & System Tray bindings
+echo   pkg/app       Unified Dashboard GUI & System Tray lifecycle
 echo.
 goto :end
 

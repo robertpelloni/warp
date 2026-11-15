@@ -58,3 +58,7 @@ __pycache__/
 
 # Agent Cache
 .pi/
+
+# Go build binaries
+warp-go
+warp-go.exe
